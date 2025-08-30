@@ -1,0 +1,4 @@
+src/back-end/__pycache__/
+src/back-end/tests/__pycache__/
+src/back-end/.pytest_cache/
+src/back-end/.venv/
