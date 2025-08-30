@@ -56,26 +56,12 @@ Faça uma breve defesa de sua proposta de solução, escreva sobre seus potencia
 Remova este bloco ao final
 ```
 
-## <a name="c3"></a>3. Metodologia
-```
-Descreva a metodologia CRISP-DM e suas etapas de desenvolvimento, citando o referencial teórico. Você deve apenas enunciar os métodos, sem dizer ainda como eles foram aplicados, nem quais resultados foram obtidos.
-
-Remova este bloco ao final
-```
-
 ## <a name="c4"></a>4. Desenvolvimento e Resultados
 ### 4.1. Compreensão do Problema
 #### 4.1.1. Contexto da indústria 
 ```
-Descreva aqui o Contexto Setorial e posicione a análise das 5 Forças de Porter
+Descreva aqui o Contexto Setorial
 
-Remova este bloco ao final
-```
-#### 4.1.2. Análise SWOT 
-```
-Posicione aqui sua análise SWOT.
-
-Remova este bloco ao final
 ```
 
 #### 4.1.3. Planejamento Geral da Solução
@@ -89,19 +75,16 @@ e) qual será o critério de sucesso.
 Remova este bloco ao final
 ```
 
-#### 4.1.4. Value Proposition Canvas
 ```
-Posicione aqui seu canvas.
+#### 4.1.5. Público Alvo
 
-Remova este bloco ao final
-```
+A definição de público-alvo é um elemento essencial no desenvolvimento de uma solução tecnológica. Ela orienta não apenas o design da experiência do usuário, mas também a narrativa de valor do produto, os canais de distribuição e a própria viabilidade de mercado. Conhecer com clareza quem são os potenciais usuários, quais dores compartilham e de que forma sua solução se conecta a essas necessidades é o que diferencia uma ideia promissora de um produto com real aderência. No caso de uma ferramenta voltada para análise e aprimoramento da comunicação em pitches de vendas e captação, compreender os perfis que mais se beneficiam dessa proposta é fundamental para guiar tanto o desenvolvimento técnico quanto a estratégia de posicionamento.
 
-#### 4.1.5. Matriz de Riscos
-```
-Posicione aqui sua matriz.
+Quando pensamos sobre o público que melhor aproveitaria a ferramenta sendo desenvolvida, três principais grupos se destacam: líderes de área, executivos e gestores, e empreendedores. Ainda que em contextos diferentes, o problema central compartilhado pelos grupos é o mesmo: a efetividade na comunicação durante a transmissão de ideias. Todos enfrentam situações em que o peso de uma apresentação é determinante para conquistar apoio, gerar confiança ou obter recursos.
 
-Remova este bloco ao final
-```
+Os líderes de área se deparam com o desafio de defender projetos estratégicos dentro de suas organizações, precisando transmitir clareza e segurança para diretoria e stakeholders internos. Já os executivos e gestores têm como prioridade a manutenção de sua credibilidade em apresentações de alto impacto, sejam relatórios de resultados, reuniões com clientes ou interações com conselhos. Por fim, os empreendedores representam o grupo com maior urgência: seu sucesso em captar investimentos depende diretamente de um pitch bem executado e da forma como sua ideia é comunicada; sua preocupação com a privacidade é ainda mais crítica, já que envolve a exposição de informações confidenciais sobre o negócio.
+
+Apesar das diferenças de contexto, esses três perfis convergem em três necessidades centrais: aprimorar a performance de comunicação em pitches, garantir a confidencialidade de informações estratégicas e acessar uma experiência de treinamento realista e integrada. A solução proposta se posiciona justamente na interseção dessas demandas, oferecendo privacidade, análise aprofundada da performance comunicativa e treinamento interativo orientado a cenários do mundo real.
 
 #### 4.1.6. Personas
 ```
@@ -110,68 +93,7 @@ Posicione aqui suas Personas (indique se são personas que utilizam o modelo e/o
 Remova este bloco ao final
 ```
 
-#### 4.1.7. Jornadas do Usuário
-```
-Posicione aqui seus mapas de jornadas do usuário que utiliza o modelo.
 
-Remova este bloco ao final
-```
-
-#### 4.1.8 Política de Privacidade
-```
-Posicione aqui sua política de privacidade em acordo com a LGPD
-
-Remova este bloco ao final
-```
-
-### 4.2. Compreensão dos Dados
-
-#### 4.2.1. Exploração de dados
-```
-Apresentar a estatística descritiva básica de cada coluna, identificar se a coluna é numérica ou categórica e pelo menos 3 gráficos para visualizar a relação entre colunas escolhidas pelo grupo.
-
-Remova este bloco ao final
-```
-
-#### 4.2.2. Pré-processamento dos dados
-```
-Apresentar quais foram as ações realizadas de limpeza (tratamento de missing values e remoção de outliers) e transformação (normalização e codificação) das colunas. Se houverem outliers, cite quais são e qual(is) correção(ões) será(ão) aplicada(s).
-
-Remova este bloco ao final
-```
-
-#### 4.2.3. Hipóteses
-```
-Descreva três hipóteses sobre a relação dos dados e o problema. Justifique cada uma delas. 
-
-Remova este bloco ao final
-```
-
-### 4.3. Preparação dos Dados e Modelagem
-```
-Caso seu projeto seja Modelo Supervisionado, apresentar: 
-a) Organização dos dados (conjunto de treinamento, validação e testes)
-b) Modelagem para o problema (proposta de features com a explicação completa da linha de raciocínio).
-c) Métricas relacionadas ao modelo (pelo menos 3).
-d) Apresentar o primeiro modelo candidato, e uma discussão sobre os resultados deste modelo (discussão sobre as métricas para esse modelo candidato).
-
-Caso seu projeto seja Modelo Não-Supervisionado, apresentar:
-a) Modelagem para o problema (proposta de features com a explicação completa da linha de raciocínio).
-b) Primeiro modelo candidato para o problema.
-c) Justificativa para a definição do K do modelo.
-d) Escolha de um tipo de sistema de recomendação e a justificativa para essa escolha.
-
-Remova este bloco ao final
-```
-
-### 4.4. Comparação de Modelos
-```
-- Descrever e justificar a escolha da métrica de avaliação dos modelos com base no que é mais importante para o problema ao 
-  se medir a qualidade desses modelos;
-- Descrever ao menos três modelos candidatos, seus respectivos algoritmos, seus tunings de hiperparâmetros e suas métricas 
-  alcançadas;
-
-Remova este bloco ao final
 ```
 
 ### 4.5. Avaliação
