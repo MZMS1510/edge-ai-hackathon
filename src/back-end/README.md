@@ -1,3 +1,49 @@
+# Edge AI — Analista de Apresentações (100% local)
+
+Backend para analisar apresentações em dispositivos edge. Roda completamente localmente; use Ollama instalado no mesmo host para melhorar a qualidade das respostas.
+
+Instalação e execução
+
+```bash
+cd src/back-end
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn src.back-end.main:app --host 0.0.0.0 --port 8000
+```
+
+Configuração (opcional)
+
+```bash
+export OLLAMA_URL="http://localhost:11434/api/generate"
+```
+
+API — Exemplos
+
+- POST /analyze
+
+  ```bash
+  curl -s -X POST http://localhost:8000/analyze \
+    -H 'Content-Type: application/json' \
+    -d '{"text":"Bom, eu fui lá e tipo falei assim..."}'
+  ```
+
+- POST /feedback
+
+  ```bash
+  curl -s -X POST http://localhost:8000/feedback \
+    -H 'Content-Type: application/json' \
+    -d '{"transcript":"Olá ...","poses":[{"timestamp":0.5,"pose":"open"}],"vices":[{"phrase":"tipo","count":2,"examples":[]}]}'
+  ```
+
+Testes
+
+```bash
+cd src/back-end
+. .venv/bin/activate
+pip install pytest
+pytest -q
+```
 
 # Edge AI - Analista de Apresentações (100% local)
 
