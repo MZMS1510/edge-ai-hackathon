@@ -14,7 +14,7 @@ pip install -r requirements.txt
 python run.py
 
 # Opção 2: Execução direta
-python main.py
+python run.py
 ```
 
 ### 3. Acesso à Aplicação
