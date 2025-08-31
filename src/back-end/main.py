@@ -80,6 +80,16 @@ COMMON_FILLERS = [
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/generate")
 
+# System prompt for the feedback model (strict: only communication skills)
+SYSTEM_PROMPT = (
+    "Você é um avaliador especializado exclusivamente em habilidades de comunicação de apresentadores. "
+    "Gere feedback profissional e acionável sobre gesticulação, postura, contato visual (se disponível), tom de voz, "
+    "intensidade/volume, velocidade de fala, pausas, vícios de linguagem, clareza articulatória, ritmo e energia. "
+    "NÃO avalie conteúdo, ideias, produto, precisão factual ou qualidade técnica do roteiro. Baseie-se apenas nos dados "
+    "fornecidos (transcript, vices, poses, audio_features, video_features, extra). Responda SOMENTE em JSON válido "
+    "conforme o esquema esperado pelo serviço de feedback. Idioma: português (pt-BR)."
+)
+
 
 def local_filler_analysis(text: str) -> dict:
     lc = text.lower()
@@ -107,21 +117,23 @@ def local_filler_analysis(text: str) -> dict:
     return {"summary": summary, "repetitions": reps, "suggestions": suggestions}
 
 
-def call_ollama(text: str, model: str) -> dict:
+def call_ollama(text: str, model: str, system_prompt: str = None) -> dict:
     # Construct a prompt asking for strict JSON output in Portuguese
-    prompt = (
-        "Você é um avaliador de apresentações. Analise o texto abaixo e também combine quaisquer pontos adicionais "
-        "fornecidos (notas de análise de vídeo, marcações de transcrição) em um único texto corrido de feedback. "
-        "Identifique vícios de linguagem (palavras/expressões repetidas, muletas verbais) e devolva um JSON estrito "
-        "com as chaves: summary (string), feedback (string: texto corrido com sugestões e pontos), "
-        "repetitions (lista de objetos com phrase, count, examples), suggestions (lista de strings).\n"
-        "Formato exigido: JSON válido, sem texto adicional.\n"
+    # If a system_prompt is provided, prepend it to the user text to bias the model
+    user_block = (
+        "Analise o texto abaixo e combine quaisquer pontos adicionais fornecidos em um único feedback corrido. "
+        "Formato exigido: JSON válido conforme o esquema do serviço de feedback.\n"
         "----TEXT----\n"
         f"{text}\n"
         "----END----\n"
     )
 
-    payload = {"model": model, "prompt": prompt, "max_tokens": 512}
+    if system_prompt:
+        prompt = system_prompt + "\n\n" + user_block
+    else:
+        prompt = user_block
+
+    payload = {"model": model, "prompt": prompt, "max_tokens": 1024}
     # Security / offline guarantee: only allow local Ollama endpoints
     try:
         from urllib.parse import urlparse

@@ -30,3 +30,10 @@ def test_feedback_fallback_compose():
     # compose_feedback_fallback returns dict with keys 'text' and 'highlights'
     assert isinstance(res, dict)
     assert "Vícios de linguagem detectados" in res["text"]
+
+
+def test_system_prompt_exists():
+    analyzer = load_analyzer_module()
+    assert hasattr(analyzer, "SYSTEM_PROMPT")
+    assert isinstance(analyzer.SYSTEM_PROMPT, str)
+    assert len(analyzer.SYSTEM_PROMPT) > 0
