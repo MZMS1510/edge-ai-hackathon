@@ -1,15 +1,22 @@
-# Qualcomm - Edge AI Developer Hackathon
+# Edge AI Hackathon - Communication Coach
 
-<p align="center">
-<a href= "https://www.qualcomm.com/developer/events/edge-ai-developer-hackathon/brazil"><img src="./assets/Qualcomm.jpeg" alt="Qualcomm - Foto" border="0" width="100%"></a>
-</p>
+## 🎯 Sobre o Projeto
 
 # Nome do Projeto: Pitch Pract
 
 ## Nome do Grupo: Coditores
 
+Este é um sistema de análise de comunicação em tempo real que utiliza IA para avaliar postura, gestos e contato visual durante apresentações. Otimizado para dispositivos Qualcomm Snapdragon X.
 
-## 👨‍🎓 Membros do time: 
+## 🚀 Funcionalidades Principais
+
+- **Análise de Postura**: Avalia alinhamento corporal e posicionamento
+- **Detecção de Gestos**: Analisa expressividade e uso de gestos
+- **Contato Visual**: Monitora direção do olhar e engajamento
+- **Relatórios Detalhados**: Gera análises completas com recomendações
+- **Interface Web**: Dashboard interativo com visualizações em tempo real
+
+## 📁 Estrutura do Projeto
 
  <div align="center">
   <table>
@@ -41,14 +48,7 @@ Entre os arquivos e pastas presentes na raiz do projeto, estão definidos os seg
 edge-ai-hackathon/
 │
 ├── assets/                           # Elementos visuais e imagens
-│   ├── Qualcomm.jpeg                 # Logo do evento
 │   ├── fotos/                        # Fotos dos desenvolvedores do projeto
-│   │   ├── ana-cristina.jpg
-│   │   ├── carlos-icaro.jpg
-│   │   ├── felipe-martins.jpg
-│   │   ├── gustavo-martins.jpg
-│   │   ├── lavinia-mendonca.jpg
-│   │   └── marcos-marcondes.jpg
 │   └── personas/                     # Imagens das personas e user stories
 │       ├── 3w3c.png
 │       ├── invest.png
@@ -56,65 +56,90 @@ edge-ai-hackathon/
 │       ├── persona2.png
 │       └── persona3.png
 │
-├── documents/                        # Documentação complementar
+├── app/                          # Aplicação principal
+│   ├── core/                     # Lógica de negócio
+│   ├── utils/                    # Utilitários
+│   ├── static/                   # Arquivos estáticos
+│   │   ├── css/
+│   │   └── js/
+│   ├── templates/                # Templates HTML
+│   └── requirements.txt          # Dependências
+│
+├── docs/                        # Documentação complementar
 │   └── documentacao.md               # Documento principal do projeto
 │
-├── src/                              # Código-fonte do projeto
-│   └── back-end/                     # Backend do projeto
-│       └── __pycache__/              # Arquivos de cache do Python
-│           ├── core_processing.cpython-310.pyc
-│           ├── main.cpython-310.pyc
-│           ├── main.cpython-313.pyc
-│           ├── ollama_client.cpython-310.pyc
-│           ├── pose_model.cpython-310.pyc
-│           ├── pose_model.cpython-313.pyc
-│
 ├── LICENSE                           # Licença do projeto
-├── README.md                         # Documentação do projeto
+└── README.md                         # Documentação do projeto
 ```
 
-## 💻 Configuração e Execução da ferramenta
+## 🛠️ Instalação
 
-&nbsp;&nbsp;&nbsp;&nbsp;Aqui você encontrará todas as instruções necessárias para instalar e executar o projeto em um ambiente local, incluindo comandos, programas, bibliotecas e ferramentas.
+1. **Clone o repositório**:
+```bash
+git clone <repository-url>
+cd edge-ai-hackathon
+```
 
-### Pré-requisitos
+2. **Instale as dependências**:
+```bash
+cd app
+pip install -r requirements.txt
+```
 
-1. Git - [Download](https://git-scm.com/downloads)
-2. Adicionar
+3. **Execute a aplicação**:
+```bash
+python main.py
+```
 
-### Instalação
+4. **Acesse no navegador**:
+```
+http://localhost:5000
+```
 
-1. Clone the repository:
-    ```sh
-    git clone [Adicionar aqui o link do repositório]
-    cd nome_do_repo
-    ```
+## 🎥 Como Usar
 
-2. Instalando as dependências:
-    ```sh
-    npm install
-    ```
+1. **Inicie uma sessão**: Clique em "Start Coaching"
+2. **Posicione-se**: Fique em frente à câmera
+3. **Apresente**: Fale naturalmente como em uma apresentação
+4. **Monitore**: Acompanhe suas métricas em tempo real
+5. **Analise**: Veja o relatório final com recomendações
 
-3. Restante do necessário:
+## 🔧 Requisitos do Sistema
 
-    ```sh
-    ....
-    ```
+- **Sistema Operacional**: Windows 10/11
+- **Processador**: Qualcomm Snapdragon X (recomendado)
+- **Câmera**: Webcam funcional
+- **Python**: 3.8+
+- **RAM**: 4GB mínimo
 
-### Executando a aplicação
+## 📊 Tecnologias Utilizadas
 
-1. Execute o código:
-    ```sh
-    npm start
-    ```
+- **Backend**: Flask, SocketIO
+- **IA**: MediaPipe, OpenCV
+- **Frontend**: HTML5, CSS3, JavaScript
+- **Visualização**: Plotly, Chart.js
+- **Otimização**: Qualcomm Snapdragon X
 
-2. Acessando a aplicação:
-    - Adicione aqio
+## 🤝 Contribuição
 
+1. Fork o projeto
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Abra um Pull Request
 
-## 📋 Licença
+## 📄 Licença
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-### Licença MIT
+## 🆘 Suporte
+
+Para dúvidas ou problemas:
+- Abra uma issue no GitHub
+- Consulte a documentação em `/docs`
+- Verifique o [QUICK_START.md](QUICK_START.md)
+
+---
+
+**Desenvolvido para o Edge AI Hackathon - Qualcomm**
 

@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualcomm Voice Pitch Monitor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .status-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .status-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e0e6ff;
+        }
+        
+        .status-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .status-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .status-value.success {
+            color: #28a745;
+        }
+        
+        .status-value.error {
+            color: #dc3545;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn.stop {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .real-time-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .data-card {
+            background: #f8f9ff;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e0e6ff;
+        }
+        
+        .data-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .data-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .chart-container {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.3em;
+        }
+        
+        #pitchChart {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .statistics {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .statistics h3 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .status-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .real-time-data {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎤 Qualcomm Voice Pitch Monitor</h1>
+            <p>Monitoramento de pitch em tempo real otimizado para Snapdragon X</p>
+        </div>
+        
+        <div class="status-section">
+            <div class="status-card">
+                <h3>🔧 Status do Sistema</h3>
+                <div class="status-item">
+                    <span class="status-label">Snapdragon X:</span>
+                    <span class="status-value" id="snapdragonStatus">Verificando...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Arquitetura:</span>
+                    <span class="status-value" id="architecture">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">CPUs:</span>
+                    <span class="status-value" id="cpuCount">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Memória:</span>
+                    <span class="status-value" id="memoryTotal">-</span>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <h3>🎵 Status do Monitoramento</h3>
+                <div class="status-item">
+                    <span class="status-label">Monitoramento:</span>
+                    <span class="status-value" id="monitoringStatus">Parado</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Conexão:</span>
+                    <span class="status-value" id="connectionStatus">Desconectado</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">QNN SDK:</span>
+                    <span class="status-value" id="qnnStatus">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Hexagon DSP:</span>
+                    <span class="status-value" id="dspStatus">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startMonitoring()">
+                🎧 Iniciar Monitoramento
+            </button>
+            <button class="btn stop" id="stopBtn" onclick="stopMonitoring()" disabled>
+                🛑 Parar Monitoramento
+            </button>
+        </div>
+        
+        <div class="real-time-data">
+            <div class="data-card">
+                <div class="data-value" id="currentPitch">--</div>
+                <div class="data-label">Pitch Atual (Hz)</div>
+            </div>
+            <div class="data-card">
+                <div class="data-value" id="currentNote">--</div>
+                <div class="data-label">Nota Musical</div>
+            </div>
+            <div class="data-card">
+                <div class="data-value" id="currentVolume">--</div>
+                <div class="data-label">Volume (dB)</div>
+            </div>
+            <div class="data-card">
+                <div class="data-value" id="stability">--</div>
+                <div class="data-label">Estabilidade (%)</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">📊 Pitch em Tempo Real</div>
+            <div id="pitchChart"></div>
+        </div>
+        
+        <div class="statistics">
+            <h3>📈 Estatísticas</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="avgPitch">--</div>
+                    <div class="stat-label">Pitch Médio</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="pitchRange">--</div>
+                    <div class="stat-label">Faixa de Pitch</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="pitchStability">--</div>
+                    <div class="stat-label">Estabilidade</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgVolume">--</div>
+                    <div class="stat-label">Volume Médio</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalSamples">--</div>
+                    <div class="stat-label">Total de Amostras</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Socket.IO
+        const socket = io();
+        
+        // Dados em tempo real
+        let pitchData = [];
+        let volumeData = [];
+        let timeData = [];
+        let noteData = [];
+        
+        // Status
+        let isMonitoring = false;
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSystemStatus();
+            setupSocketIO();
+            setupChart();
+        });
+        
+        function loadSystemStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    // Atualizar status do sistema
+                    document.getElementById('snapdragonStatus').textContent = 
+                        data.snapdragon_detected ? '✅ Detectado' : '❌ Não detectado';
+                    document.getElementById('snapdragonStatus').className = 
+                        'status-value ' + (data.snapdragon_detected ? 'success' : 'error');
+                    
+                    document.getElementById('architecture').textContent = data.system_info.architecture;
+                    document.getElementById('cpuCount').textContent = data.system_info.cpu_count;
+                    document.getElementById('memoryTotal').textContent = data.system_info.memory_total + ' GB';
+                    
+                    // Atualizar status das ferramentas
+                    document.getElementById('qnnStatus').textContent = 
+                        data.tools_available.qnn ? '✅ Disponível' : '❌ Não disponível';
+                    document.getElementById('dspStatus').textContent = 
+                        data.tools_available.hexagon_dsp ? '✅ Disponível' : '❌ Não disponível';
+                    
+                    // Atualizar status do monitoramento
+                    isMonitoring = data.is_monitoring;
+                    updateMonitoringStatus();
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar status:', error);
+                });
+        }
+        
+        function setupSocketIO() {
+            socket.on('connect', function() {
+                document.getElementById('connectionStatus').textContent = 'Conectado';
+                document.getElementById('connectionStatus').className = 'status-value success';
+            });
+            
+            socket.on('disconnect', function() {
+                document.getElementById('connectionStatus').textContent = 'Desconectado';
+                document.getElementById('connectionStatus').className = 'status-value error';
+            });
+            
+            socket.on('pitch_data', function(data) {
+                updateRealTimeData(data);
+                addDataPoint(data);
+                updateChart();
+            });
+            
+            socket.on('status', function(data) {
+                console.log('Status:', data.message);
+            });
+        }
+        
+        function startMonitoring() {
+            fetch('/start_monitoring')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isMonitoring = true;
+                        updateMonitoringStatus();
+                        console.log('Monitoramento iniciado');
+                    } else {
+                        alert('Erro ao iniciar monitoramento: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao iniciar monitoramento');
+                });
+        }
+        
+        function stopMonitoring() {
+            fetch('/stop_monitoring')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isMonitoring = false;
+                        updateMonitoringStatus();
+                        console.log('Monitoramento parado');
+                    } else {
+                        alert('Erro ao parar monitoramento: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao parar monitoramento');
+                });
+        }
+        
+        function updateMonitoringStatus() {
+            const statusElement = document.getElementById('monitoringStatus');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            if (isMonitoring) {
+                statusElement.textContent = 'Ativo';
+                statusElement.className = 'status-value success';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            } else {
+                statusElement.textContent = 'Parado';
+                statusElement.className = 'status-value error';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+        
+        function updateRealTimeData(data) {
+            document.getElementById('currentPitch').textContent = data.pitch.toFixed(1);
+            document.getElementById('currentNote').textContent = data.note;
+            document.getElementById('currentVolume').textContent = data.volume.toFixed(1);
+            
+            // Calcular estabilidade
+            if (pitchData.length > 1) {
+                const recentPitches = pitchData.slice(-10);
+                const std = Math.sqrt(recentPitches.reduce((acc, val) => acc + Math.pow(val - recentPitches.reduce((a, b) => a + b) / recentPitches.length, 2), 0) / recentPitches.length);
+                const mean = recentPitches.reduce((a, b) => a + b) / recentPitches.length;
+                const stability = Math.max(0, 100 - (std / mean * 100));
+                document.getElementById('stability').textContent = stability.toFixed(1);
+            }
+        }
+        
+        function addDataPoint(data) {
+            pitchData.push(data.pitch);
+            volumeData.push(data.volume);
+            timeData.push(data.timestamp);
+            noteData.push(data.note);
+            
+            // Manter apenas últimos 100 pontos
+            if (pitchData.length > 100) {
+                pitchData = pitchData.slice(-100);
+                volumeData = volumeData.slice(-100);
+                timeData = timeData.slice(-100);
+                noteData = noteData.slice(-100);
+            }
+        }
+        
+        function setupChart() {
+            const trace = {
+                x: timeData,
+                y: pitchData,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Pitch',
+                line: {
+                    color: '#667eea',
+                    width: 2
+                },
+                marker: {
+                    size: 4,
+                    color: '#667eea'
+                }
+            };
+            
+            const layout = {
+                title: 'Pitch em Tempo Real',
+                xaxis: {
+                    title: 'Tempo (s)',
+                    gridcolor: '#f0f0f0'
+                },
+                yaxis: {
+                    title: 'Pitch (Hz)',
+                    range: [80, 400],
+                    gridcolor: '#f0f0f0'
+                },
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                showlegend: false
+            };
+            
+            Plotly.newPlot('pitchChart', [trace], layout);
+        }
+        
+        function updateChart() {
+            const update = {
+                x: [timeData],
+                y: [pitchData]
+            };
+            
+            Plotly.update('pitchChart', update);
+        }
+        
+        // Atualizar estatísticas periodicamente
+        setInterval(function() {
+            if (isMonitoring) {
+                fetch('/get_statistics')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && !data.error) {
+                            document.getElementById('avgPitch').textContent = data.average_pitch.toFixed(1);
+                            document.getElementById('pitchRange').textContent = data.pitch_range.toFixed(1);
+                            document.getElementById('pitchStability').textContent = data.pitch_stability.toFixed(1);
+                            document.getElementById('avgVolume').textContent = data.average_volume.toFixed(1);
+                            document.getElementById('totalSamples').textContent = data.total_samples;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar estatísticas:', error);
+                    });
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
+```
+
+```python:src/qualcomm/requirements.txt
+# Qualcomm Voice Pitch Monitor Requirements
+# Otimizado para Snapdragon X
+
+# Web Framework
+flask==2.3.3
+flask-socketio==5.3.6
+
+# Audio Processing
+numpy==1.24.3
+scipy==1.11.1
+
+# System Monitoring
+psutil==5.9.5
+
+# Real-time Processing
+threading
+queue
+
+# Visualization (opcional)
+matplotlib==3.7.2
+plotly==5.17.0
+
+# Utilities
+python-dotenv==1.0.0
+click==8.1.7
+```
+
+```python:src/qualcomm/run.py
+#!/usr/bin/env python3
+"""
+Script de execução do Qualcomm Voice Pitch Monitor
+"""
+
+import os
+import sys
+import subprocess
+
+def check_dependencies():
+    """Verifica dependências"""
+    print(" Verificando dependências...")
+    
+    required_packages = [
+        'flask',
+        'flask_socketio',
+        'numpy',
+        'scipy',
+        'psutil'
+    ]
+    
+    missing_packages = []
+    
+    for package in required_packages:
+        try:
+            __import__(package)
+            print(f"✅ {package}")
+        except ImportError:
+            missing_packages.append(package)
+            print(f"❌ {package}")
+    
+    if missing_packages:
+        print(f"\n❌ Pacotes faltando: {', '.join(missing_packages)}")
+        print("📦 Instalando dependências...")
+        
+        try:
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'])
+            print("✅ Dependências instaladas")
+        except subprocess.CalledProcessError:
+            print("❌ Erro ao instalar dependências")
+            return False
+    
+    return True
+
+def main():
+    """Função principal"""
+    print("🚀 Qualcomm Voice Pitch Monitor")
+    print("=" * 40)
+    
+    # Verificar dependências
+    if not check_dependencies():
+        print("❌ Falha na verificação de dependências")
+        return
+    
+    # Verificar se estamos no diretório correto
+    if not os.path.exists('app.py'):
+        print("❌ Execute este script no diretório src/qualcomm/")
+        return
+    
+    print("\n🎤 Iniciando monitor de pitch...")
+    print("🌐 Interface web será aberta em: http://localhost:5000")
+    print("🛑 Pressione Ctrl+C para parar")
+    
+    try:
+        # Importar e executar app
+        from app import app, socketio
+        socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    except KeyboardInterrupt:
+        print("\n👋 Monitor finalizado")
+    except Exception as e:
+        print(f"❌ Erro: {e}")
+
+if __name__ == "__main__":
+    main()
+```
+
+```markdown:src/qualcomm/README.md
+# Qualcomm Voice Pitch Monitor
+
+Sistema de monitoramento de voz em tempo real para auxílio de pitch, otimizado para Snapdragon X.
+
+##  Objetivo
+Monitorar e analisar pitch vocal em tempo real para auxiliar em apresentações, canto, ou comunicação.
+
+## 🚀 Características
+- **Tempo Real**: Análise contínua de pitch
+- **Snapdragon X**: Otimizado para Qualcomm AI Engine
+- **Baixa Latência**: Processamento local
+- **Visualização**: Interface gráfica do pitch
+- **Feedback**: Alertas e sugestões
+
+## 📁 Estrutura
+```
+qualcomm/
+├── README.md
+├── requirements.txt
+├── run.py
+├── app.py                    # Aplicação Flask principal
+├── pitch_monitor.py          # Monitor principal
+├── templates/
+│   └── index.html           # Interface web
+└── utils/
+    └── qualcomm_utils.py     # Utilitários Qualcomm
+```
+
+## 🎵 Funcionalidades
+- Detecção de pitch em tempo real
+- Visualização de frequência
+- Análise de estabilidade vocal
+- Feedback de melhoria
+- Gravação e análise
+
+## 🔧 Instalação
+```bash
+cd src/qualcomm
+pip install -r requirements.txt
+python run.py
+```
+
+## 🌐 Uso
+1. Execute `python run.py`
+2. Acesse `http://localhost:5000`
+3. Clique em "Iniciar Monitoramento"
+4. Veja os dados em tempo real
+
+## 🎤 Para testar com áu
+```
+

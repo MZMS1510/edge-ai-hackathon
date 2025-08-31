@@ -1,0 +1,32 @@
+{
+  "session_info": {
+    "start_time": "2025-08-31T10:08:42.083640",
+    "end_time": "2025-08-31T10:09:27.875645",
+    "duration_minutes": 0.8,
+    "total_frames": 41
+  },
+  "average_scores": {
+    "posture": 66.0,
+    "gesture": 71.7,
+    "eye_contact": 74.6,
+    "overall": 70.8
+  },
+  "improvements": {
+    "posture": 1.9,
+    "gesture": 1.6,
+    "eye_contact": -1.7,
+    "overall": 0.5
+  },
+  "strengths": [
+    "Uso expressivo de gestos"
+  ],
+  "weaknesses": [],
+  "recommendations": [
+    "🧘‍♂️ Pratique manter os ombros alinhados e a coluna ereta"
+  ],
+  "progress_indicators": [],
+  "performance_level": "Bom",
+  "next_steps": [
+    "🔄 Agende uma nova sessão de análise em 1 semana"
+  ]
+}

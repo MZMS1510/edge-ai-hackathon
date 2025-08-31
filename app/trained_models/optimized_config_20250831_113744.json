@@ -1,0 +1,48 @@
+{
+  "posture": {
+    "shoulder_threshold": 0.025979274511337278,
+    "hip_threshold": 0.00881139785051345,
+    "spine_threshold": 0.3560653321444988,
+    "variation_factor": 1.0,
+    "min_score": 15,
+    "max_score": 95
+  },
+  "gesture": {
+    "movement_threshold_low": 0.015,
+    "movement_threshold_high": 0.035,
+    "base_score_no_hands": 35,
+    "variation_factor": 1.0,
+    "min_score": 20,
+    "max_score": 90
+  },
+  "eye_contact": {
+    "center_tolerance": 0.25,
+    "movement_factor": 1.5,
+    "variation_factor": 1.0,
+    "min_score": 25,
+    "max_score": 90
+  },
+  "feedback_thresholds": {
+    "posture": {
+      "poor": 45,
+      "good": 75
+    },
+    "gesture": {
+      "poor": 30,
+      "good": 60
+    },
+    "eye_contact": {
+      "poor": 40,
+      "good": 70
+    }
+  },
+  "smoothing": {
+    "factor": 0.6,
+    "history_size": 15
+  },
+  "weights": {
+    "posture": 0.35,
+    "gesture": 0.3,
+    "eye_contact": 0.35
+  }
+}

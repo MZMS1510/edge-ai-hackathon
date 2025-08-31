@@ -1,0 +1,15 @@
+{
+  "session_info": {
+    "start_time": "2025-08-31T09:55:55.160507",
+    "end_time": "2025-08-31T09:56:00.699432",
+    "duration_minutes": 0.1,
+    "total_frames": 4
+  },
+  "average_scores": {
+    "posture": 45.0,
+    "gesture": 30.0,
+    "eye_contact": 45.0,
+    "overall": 40.5
+  },
+  "improvements": {
+    "posture": 

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Histórico</title>
+    <link rel="stylesheet" href="app/static/css/history.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        
+        .test-button:hover {
+            background: #5a6fd8;
+        }
+        
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Teste - Funcionalidade de Fechar Histórico</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instruções de Teste:</h3>
+            <ol>
+                <li>Clique no botão "Abrir Histórico" para abrir o painel</li>
+                <li>Teste as diferentes formas de fechar o histórico:</li>
+                <ul>
+                    <li>Clique no botão "×" no canto superior direito</li>
+                    <li>Clique no botão "❌ Fechar" flutuante (aparece ao lado do painel)</li>
+                    <li>Clique no botão "❌ Fechar Histórico" na parte inferior do painel</li>
+                    <li>Clique fora do painel (área escura)</li>
+                    <li>Pressione a tecla ESC</li>
+                </ul>
+                <li>Verifique se o painel fecha corretamente em todos os casos</li>
+            </ol>
+        </div>
+        
+        <button class="test-button" onclick="historyManager.toggleHistoryPanel()">
+            📊 Abrir Histórico
+        </button>
+        
+        <button class="test-button" onclick="historyManager.closeHistoryPanel()">
+            ❌ Fechar Histórico
+        </button>
+        
+        <div style="margin-top: 20px;">
+            <h3>🔧 Funcionalidades Implementadas:</h3>
+            <ul>
+                <li>✅ Botão de fechar (×) no cabeçalho do painel</li>
+                <li>✅ Botão de fechar flutuante (aparece ao lado do painel)</li>
+                <li>✅ Botão de fechar na parte inferior do painel</li>
+                <li>✅ Fechar ao clicar fora do painel</li>
+                <li>✅ Fechar com tecla ESC</li>
+                <li>✅ Animações suaves de abertura/fechamento</li>
+                <li>✅ Estilos responsivos</li>
+                <li>✅ Múltiplas opções de fechamento para melhor UX</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Botão do histórico -->
+    <button class="history-toggle" id="history-toggle">
+        📊 Histórico
+        <span class="badge" id="history-count">0</span>
+    </button>
+    
+    <!-- Painel do histórico -->
+    <div class="history-panel" id="history-panel">
+        <div class="history-header">
+            <h2>📊 Histórico de Teste</h2>
+            <button class="history-close" id="history-close" onclick="historyManager.closeHistoryPanel()">×</button>
+        </div>
+        <div class="history-content">
+            <div id="history-statistics">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Total de Análises</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">78</div>
+                        <div class="stat-label">Score Médio</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">92</div>
+                        <div class="stat-label">Melhor Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">45min</div>
+                        <div class="stat-label">Tempo Total</div>
+                    </div>
+                </div>
+            </div>
+            <div class="history-actions">
+                <button class="btn-view" id="export-history">
+                    📤 Exportar Histórico
+                </button>
+            </div>
+            <div id="history-list">
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-date">
+                            <div class="date">31/08/2024</div>
+                            <div class="time">09:30</div>
+                        </div>
+                        <div class="history-score">
+                            <div class="score-value excellent">85</div>
+                            <div class="score-label">Score Geral</div>
+                        </div>
+                        <div class="history-level">
+                            <span class="level-badge excellent">Excelente</span>
+                        </div>
+                    </div>
+                    <div class="history-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Duração:</span>
+                            <span class="detail-value">10 min</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Frames:</span>
+                            <span class="detail-value">1500</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botão de fechar adicional na parte inferior -->
+            <button class="history-close-bottom" onclick="historyManager.closeHistoryPanel()">
+                ❌ Fechar Histórico
+            </button>
+        </div>
+    </div>
+    
+    <!-- Botão de fechar flutuante -->
+    <button class="history-close-float" id="history-close-float" onclick="historyManager.closeHistoryPanel()">
+        ❌ Fechar
+    </button>
+    
+    <script src="app/static/js/history_manager.js"></script>
+</body>
+</html>

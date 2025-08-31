@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualcomm Edge AI Hub</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .status-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .status-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e0e6ff;
+        }
+        
+        .status-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .status-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .status-value.success {
+            color: #28a745;
+        }
+        
+        .status-value.error {
+            color: #dc3545;
+        }
+        
+        .tools-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .tool-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            border: 2px solid #e0e6ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+        
+        .tool-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        
+        .tool-title {
+            color: #333;
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .tool-description {
+            color: #666;
+            font-size: 1em;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .tool-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        
+        .tool-features li {
+            padding: 5px 0;
+            color: #555;
+        }
+        
+        .tool-features li:before {
+            content: "✅ ";
+            color: #28a745;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .status-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .tools-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Qualcomm Edge AI Hub</h1>
+            <p>Ferramentas de IA para comunicação e apresentação otimizadas para Snapdragon X</p>
+        </div>
+        
+        <div class="status-section">
+            <div class="status-card">
+                <h3>🔧 Status do Sistema</h3>
+                <div class="status-item">
+                    <span class="status-label">Snapdragon X:</span>
+                    <span class="status-value" id="snapdragonStatus">Verificando...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Arquitetura:</span>
+                    <span class="status-value" id="architecture">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">CPUs:</span>
+                    <span class="status-value" id="cpuCount">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Memória:</span>
+                    <span class="status-value" id="memoryTotal">-</span>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <h3>🎯 Status das Ferramentas</h3>
+                <div class="status-item">
+                    <span class="status-label">Pitch Monitor:</span>
+                    <span class="status-value" id="pitchStatus">Parado</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Communication Coach:</span>
+                    <span class="status-value" id="coachStatus">Parado</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">QNN SDK:</span>
+                    <span class="status-value" id="qnnStatus">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Hexagon DSP:</span>
+                    <span class="status-value" id="dspStatus">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tools-section">
+            <div class="tool-card" onclick="window.location.href='/pitch-monitor'">
+                <div class="tool-icon">🎤</div>
+                <div class="tool-title">Pitch Monitor</div>
+                <div class="tool-description">
+                    Monitore seu pitch vocal em tempo real para melhorar apresentações e canto.
+                </div>
+                <ul class="tool-features">
+                    <li>Análise de frequência em tempo real</li>
+                    <li>Detecção de notas musicais</li>
+                    <li>Gráficos interativos</li>
+                    <li>Otimizado para Snapdragon X</li>
+                </ul>
+                <a href="/pitch-monitor" class="btn">Abrir Pitch Monitor</a>
+            </div>
+            
+            <div class="tool-card" onclick="window.location.href='/communication-coach'">
+                <div class="tool-icon">🎥</div>
+                <div class="tool-title">Communication Coach</div>
+                <div class="tool-description">
+                    Analise gestos e poses para melhorar sua comunicação e apresentações.
+                </div>
+                <ul class="tool-features">
+                    <li>Análise de postura em tempo real</li>
+                    <li>Detecção de gestos</li>
+                    <li>Feedback de contato visual</li>
+                    <li>Edge computing local</li>
+                </ul>
+                <a href="/communication-coach" class="btn">Abrir Communication Coach</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Socket.IO
+        const socket = io();
+        
+        // Carregar status do sistema
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSystemStatus();
+            setupSocketIO();
+        });
+        
+        function loadSystemStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    // Atualizar status do sistema
+                    document.getElementById('snapdragonStatus').textContent = 
+                        data.snapdragon_detected ? '✅ Detectado' : '❌ Não detectado';
+                    document.getElementById('snapdragonStatus').className = 
+                        'status-value ' + (data.snapdragon_detected ? 'success' : 'error');
+                    
+                    document.getElementById('architecture').textContent = data.system_info.architecture;
+                    document.getElementById('cpuCount').textContent = data.system_info.cpu_count;
+                    document.getElementById('memoryTotal').textContent = data.system_info.memory_total + ' GB';
+                    
+                    // Atualizar status das ferramentas
+                    document.getElementById('qnnStatus').textContent = 
+                        data.tools_available.qnn_sdk ? '✅ Disponível' : '❌ Não disponível';
+                    document.getElementById('dspStatus').textContent = 
+                        data.tools_available.hexagon_dsp ? '✅ Disponível' : '❌ Não disponível';
+                    
+                    // Atualizar status de monitoramento
+                    document.getElementById('pitchStatus').textContent = 
+                        data.is_monitoring ? 'Ativo' : 'Parado';
+                    document.getElementById('pitchStatus').className = 
+                        'status-value ' + (data.is_monitoring ? 'success' : 'error');
+                    
+                    document.getElementById('coachStatus').textContent = 
+                        data.is_coaching ? 'Ativo' : 'Parado';
+                    document.getElementById('coachStatus').className = 
+                        'status-value ' + (data.is_coaching ? 'success' : 'error');
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar status:', error);
+                });
+        }
+        
+        function setupSocketIO() {
+            socket.on('connect', function() {
+                console.log('Conectado ao Edge AI Hub');
+            });
+            
+            socket.on('disconnect', function() {
+                console.log('Desconectado do Edge AI Hub');
+            });
+        }
+    </script>
+</body>
+</html>
