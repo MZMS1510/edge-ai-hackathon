@@ -55,38 +55,68 @@ def allowed_file(filename):
 def check_ffmpeg():
     """Verifica se FFmpeg está disponível"""
     try:
-        # Primeiro tenta do PATH atual
-        result = subprocess.run(['ffmpeg', '-version'], 
-                              capture_output=True, text=True, timeout=5)
-        if result.returncode == 0:
-            return True
-    except:
-        pass
-    
-    # Se não funcionar, tenta recarregar PATH do sistema
-    try:
-        import os
-        # Recarregar PATH do Windows
-        machine_path = os.environ.get('PATH', '')
-        user_path = ''
+        # Primeiro, recarregar PATH completo do Windows
         try:
             import winreg
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, 'Environment') as key:
-                user_path = winreg.QueryValueEx(key, 'PATH')[0]
-        except:
-            pass
+            machine_path = ''
+            user_path = ''
+            
+            # PATH da máquina (todos os usuários)
+            try:
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, 
+                                   'SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment') as key:
+                    machine_path = winreg.QueryValueEx(key, 'PATH')[0]
+            except:
+                pass
+            
+            # PATH do usuário
+            try:
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, 'Environment') as key:
+                    user_path = winreg.QueryValueEx(key, 'PATH')[0]
+            except:
+                pass
+            
+            # Atualizar PATH no ambiente atual
+            if machine_path or user_path:
+                full_path = machine_path + ';' + user_path
+                os.environ['PATH'] = full_path
+                
+            # Procurar em locais comuns também
+            import glob
+            common_paths = [
+                r"C:\ffmpeg\bin",
+                r"C:\Program Files\ffmpeg\bin", 
+                r"C:\Program Files (x86)\ffmpeg\bin",
+                r"C:\tools\ffmpeg\bin",
+                r"C:\Users\{}\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-*\bin".format(os.getenv('USERNAME'))
+            ]
+            
+            for path_pattern in common_paths:
+                if '*' in path_pattern:
+                    matches = glob.glob(path_pattern)
+                    for match in matches:
+                        if os.path.exists(os.path.join(match, 'ffmpeg.exe')):
+                            current_path = os.environ.get('PATH', '')
+                            if match not in current_path:
+                                os.environ['PATH'] = current_path + ';' + match
+                            break
+                else:
+                    if os.path.exists(os.path.join(path_pattern, 'ffmpeg.exe')):
+                        current_path = os.environ.get('PATH', '')
+                        if path_pattern not in current_path:
+                            os.environ['PATH'] = current_path + ';' + path_pattern
+                        break
+                        
+        except Exception as e:
+            print(f"Erro ao recarregar PATH: {e}")
         
-        # Combinar PATHs
-        full_path = machine_path + ';' + user_path
-        
-        # Atualizar PATH atual
-        os.environ['PATH'] = full_path
-        
-        # Tentar novamente
+        # Testar FFmpeg
         result = subprocess.run(['ffmpeg', '-version'], 
                               capture_output=True, text=True, timeout=5)
         return result.returncode == 0
-    except:
+    except FileNotFoundError:
+        return False
+    except Exception:
         return False
 
 def get_video_info(video_path):
