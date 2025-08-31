@@ -1,51 +1,148 @@
-# 🎯 Edge Video to Audio Converter
+# 🚀 Quick Start - Communication Coach
 
-## ⚡ EXECUÇÃO EM 1 LINHA
+## ⚡ Execução Rápida
 
-### Opção 1: Python (Funciona de qualquer lugar)
+### 1. Instalação das Dependências
 ```bash
-python C:\Users\qchac\Documents\edge-ai-hackathon\extrator.py
+cd app
+pip install -r requirements.txt
 ```
 
-### Opção 2: Comando direto (Windows)
+### 2. Execução da Aplicação
 ```bash
-C:\Users\qchac\Documents\edge-ai-hackathon\extrator.bat
+# Opção 1: Usando o launcher (recomendado)
+python run.py
+
+# Opção 2: Execução direta
+python main.py
 ```
 
-### Opção 3: No diretório do projeto
-```bash
-cd C:\Users\qchac\Documents\edge-ai-hackathon
-python extrator.py
+### 3. Acesso à Aplicação
+```
+http://localhost:5000
 ```
 
-## 🌟 Como Funciona
+## 🎯 Funcionalidades Principais
 
-1. **Execute qualquer comando acima**
-2. **Aguarde a mensagem**: `🌐 Acesse: http://localhost:5000`
-3. **Abra o navegador**: http://localhost:5000
-4. **Arraste e solte** um vídeo na interface
-5. **Clique em "Baixar Áudio"** quando a conversão terminar
+### Análise de Comunicação
+- **Postura**: Avalia alinhamento corporal
+- **Gestos**: Analisa expressividade dos movimentos
+- **Contato Visual**: Monitora direção do olhar
 
-## ✅ Testado e Funcionando
+### Interface Web
+- Dashboard em tempo real
+- Visualização de métricas
+- Relatórios detalhados
+- Histórico de análises
 
-- ✅ **Execução de qualquer diretório**: O script encontra automaticamente o projeto
-- ✅ **Instalação automática**: Instala Flask e OpenCV se necessário  
-- ✅ **Interface web funcional**: Drag-and-drop para upload
-- ✅ **Conversão completa**: Vídeo → WAV funcionando
-- ✅ **Download automático**: Arquivos salvos e disponibilizados
-- ✅ **100% Edge Computing**: Tudo processado localmente
+## 🔧 Requisitos do Sistema
 
-## 🎬 Formatos Suportados
+- **Sistema Operacional**: Windows 10/11
+- **Processador**: Qualcomm Snapdragon X (recomendado)
+- **Câmera**: Webcam funcional
+- **Python**: 3.8+
+- **RAM**: 4GB mínimo
 
-**Entrada**: MP4, AVI, MOV, MKV, WMV, FLV, M4V  
-**Saída**: WAV (PCM 16-bit, 44.1kHz, estéreo)
+## 📊 Como Usar
 
-## 🔧 Requisitos Mínimos
+1. **Inicie a aplicação**: Execute `python run.py`
+2. **Acesse o navegador**: Vá para `http://localhost:5000`
+3. **Clique em "Start Coaching"**: Inicia a análise
+4. **Posicione-se**: Fique em frente à câmera
+5. **Apresente**: Fale naturalmente como em uma apresentação
+6. **Monitore**: Acompanhe suas métricas em tempo real
+7. **Clique em "Stop Coaching"**: Finaliza e gera relatório
 
-- Python 3.8+
-- FFmpeg (instalado automaticamente via winget se necessário)
-- 4GB RAM (recomendado 8GB+)
+## 🛠️ Troubleshooting
+
+### Problemas Comuns
+
+**Câmera não detectada:**
+- Verifique se a câmera está conectada
+- Confirme permissões de acesso
+- Reinicie a aplicação
+
+**Erro de dependências:**
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+**Erro MediaPipe:**
+```bash
+pip uninstall opencv-python
+pip install opencv-python-headless
+```
+
+**Porta ocupada:**
+- Mude a porta no arquivo `main.py`
+- Ou feche outras aplicações usando a porta 5000
+
+### Logs Importantes
+- `✅ Câmera inicializada`: Câmera funcionando
+- `✅ MediaPipe inicializado`: IA carregada
+- `📊 Frame X`: Processamento em tempo real
+- `📄 Relatório salvo`: Relatório gerado
+
+## 📁 Estrutura do Projeto
+
+```
+app/
+├── core/                     # Lógica de negócio
+│   ├── analysis.py          # Análise de comunicação
+│   ├── camera.py            # Gerenciamento de câmera
+│   └── report_manager.py    # Gerenciamento de relatórios
+├── utils/                    # Utilitários
+│   └── qualcomm_utils.py    # Detecção Qualcomm
+├── templates/                # Templates HTML
+├── static/                   # Arquivos estáticos
+├── main.py                   # Aplicação Flask
+├── run.py                    # Launcher
+└── requirements.txt          # Dependências
+```
+
+## 🔍 APIs Disponíveis
+
+### Rotas Principais
+- `GET /`: Página principal
+- `GET /status`: Status do sistema
+- `POST /start_coaching`: Inicia análise
+- `POST /stop_coaching`: Para análise
+- `GET /get_communication_metrics`: Métricas em tempo real
+
+### APIs de Histórico
+- `GET /api/history`: Lista histórico
+- `GET /api/report/<id>`: Relatório específico
+- `DELETE /api/report/<id>`: Remove relatório
+- `GET /api/export-history`: Exporta histórico
+
+## 🎨 Personalização
+
+### Configuração da Câmera
+- A configuração é salva automaticamente em `camera_config.json`
+- Para resetar: delete o arquivo `camera_config.json`
+
+### Estilos CSS
+- Edite `static/css/` para personalizar aparência
+- Templates em `templates/` para modificar interface
+
+### Análise de IA
+- Módulo principal: `core/analysis.py`
+- Ajuste parâmetros de detecção conforme necessário
+
+## 📈 Próximos Passos
+
+1. **Teste a aplicação** com diferentes cenários
+2. **Analise os relatórios** gerados
+3. **Personalize** conforme suas necessidades
+4. **Contribua** com melhorias no GitHub
+
+## 🆘 Suporte
+
+- **Issues**: Abra uma issue no GitHub
+- **Documentação**: Consulte `/docs`
+- **Código**: Analise os módulos em `/app/core`
 
 ---
 
-**🚀 Execute agora: `python C:\Users\qchac\Documents\edge-ai-hackathon\extrator.py`**
+**Desenvolvido para o Edge AI Hackathon - Qualcomm** 🚀

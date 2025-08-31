@@ -1,110 +1,107 @@
-# Qualcomm - Edge AI Developer Hackathon
+# Edge AI Hackathon - Communication Coach
 
-<p align="center">
-<a href= "https://www.qualcomm.com/developer/events/edge-ai-developer-hackathon/brazil"><img src="./assets/Qualcomm.jpeg" alt="Qualcomm - Foto" border="0" width="100%"></a>
-</p>
+## 🎯 Sobre o Projeto
 
-# [Nome do projeto]
+Este é um sistema de análise de comunicação em tempo real que utiliza IA para avaliar postura, gestos e contato visual durante apresentações. Otimizado para dispositivos Qualcomm Snapdragon X.
 
-## Coditores
+## 🚀 Funcionalidades Principais
 
+- **Análise de Postura**: Avalia alinhamento corporal e posicionamento
+- **Detecção de Gestos**: Analisa expressividade e uso de gestos
+- **Contato Visual**: Monitora direção do olhar e engajamento
+- **Relatórios Detalhados**: Gera análises completas com recomendações
+- **Interface Web**: Dashboard interativo com visualizações em tempo real
 
-## 👨‍🎓 Membros do time: 
+## 📁 Estrutura do Projeto
 
- <div align="center">
-  <table>
-    <tr>
-     <td align="center"><a href="https://www.linkedin.com/in/ana-cristina-jardim/"><img style="border-radius: 10%;" src="./assets/fotos/ana-cristina.jpg" width="100px;" alt="Ana Cristina - Foto" /><br><sub><b>Ana Cristina</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/carlosicaro"><img style="border-radius: 10%;" src="./assets/fotos/carlos-icaro.jpg" width="100px;" alt="Carlos Icaro Kauã Coelho Paiva - Foto" /><br><sub><b>Carlos Icaro</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/ifelipemartins"><img style="border-radius: 10%;" src="./assets/fotos/felipe-martins.jpg" width="100px;" alt="Felipe Martins - Foto" /><br><sub><b>Felipe Martins</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/gustavo-martinsg"><img style="border-radius: 10%;" src="./assets/fotos/gustavo-martins.jpg" width="100px;" alt="Gustavo Martins - Foto" /><br><sub><b>Gustavo Martins</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/lavinia-mendonca/"><img style="border-radius: 10%;" src="./assets/fotos/lavinia-mendonca.jpg" width="100px;" alt="Lavinia Mendonça - Foto" /><br><sub><b>Lavinia Mendonça</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/marcos-vinicius-m-silva/"><img style="border-radius: 10%;" src="./assets/fotos/marcos-marcondes.jpg" width="100px;" alt="Marcos Marcondes - Foto" /><br><sub><b>Marcos Marcondes</b></sub></a></td>
-     
-
-  </table>
-</div>
-
-## 📝 Descrição
-
-&nbsp;&nbsp;&nbsp;&nbsp;Adicionar aqui a descrição de projeto
-
-## 📝 Vídeo demonstrativo
-
-Clique [aqui]("Adicionar link aqui") para acessar o vídeo demonstrativo da ferramenta.
-
-## 📁 Folder Structure
-
-Among the files and folders present in the root of the project, the following are defined:
-
-```plaintext
-project/
-│
-├── assets/                           # Elementos não estruturais relacionados à documentação
-│   ├── fotos/                        # Fotos dos desenvolvedores do proejeto
-│   └── N/                            # Adicionar
-│
-├── documents/                        # Adicionar o que for necessário
-│   ├── N/                            # Adicionar
-│   └── N/                            # Adicionar
-│
-├── src/                              # Adicionar
-│   ├── FrontEnd/                     # Adicionar
-│   │   ├── N/                        # Adicionar
-│   │   ├── NN/                       # Adicioanr
-│   │   └── NNN/                      # Adicionar
-│   │
-│   │
-│   └── BackEnd/                      # Adicionar
-│       ├── N/                        # Adicionar
-│       ├── NN/                       # Adicioanr
-│       └── NNN/                      # Adicionar
-│
-└── README.md                         # Documentação do projeto
+```
+edge-ai-hackathon/
+├── app/                          # Aplicação principal
+│   ├── core/                     # Lógica de negócio
+│   │   ├── analysis.py          # Análise de comunicação
+│   │   ├── camera.py            # Gerenciamento de câmera
+│   │   └── report_manager.py    # Gerenciamento de relatórios
+│   ├── utils/                    # Utilitários
+│   │   └── qualcomm_utils.py    # Detecção Qualcomm
+│   ├── static/                   # Arquivos estáticos
+│   │   ├── css/
+│   │   └── js/
+│   ├── templates/                # Templates HTML
+│   ├── main.py                   # Aplicação Flask
+│   └── requirements.txt          # Dependências
+├── assets/                       # Recursos (imagens, áudios)
+├── docs/                         # Documentação
+└── README.md                     # Este arquivo
 ```
 
-## 💻 Configuração e Execução da ferramenta
+## 🛠️ Instalação
 
-&nbsp;&nbsp;&nbsp;&nbsp;Aqui você encontrará todas as instruções necessárias para instalar e executar o projeto em um ambiente local, incluindo comandos, programas, bibliotecas e ferramentas.
+1. **Clone o repositório**:
+```bash
+git clone <repository-url>
+cd edge-ai-hackathon
+```
 
-### Pré-requisitos
+2. **Instale as dependências**:
+```bash
+cd app
+pip install -r requirements.txt
+```
 
-1. Git - [Download](https://git-scm.com/downloads)
-2. Adicionar
+3. **Execute a aplicação**:
+```bash
+python main.py
+```
 
-### Instalação
+4. **Acesse no navegador**:
+```
+http://localhost:5000
+```
 
-1. Clone the repository:
-    ```sh
-    git clone [Adicionar aqui o link do repositório]
-    cd nome_do_repo
-    ```
+## 🎥 Como Usar
 
-2. Instalando as dependências:
-    ```sh
-    npm install
-    ```
+1. **Inicie uma sessão**: Clique em "Start Coaching"
+2. **Posicione-se**: Fique em frente à câmera
+3. **Apresente**: Fale naturalmente como em uma apresentação
+4. **Monitore**: Acompanhe suas métricas em tempo real
+5. **Analise**: Veja o relatório final com recomendações
 
-3. Restante do necessário:
+## 🔧 Requisitos do Sistema
 
-    ```sh
-    ....
-    ```
+- **Sistema Operacional**: Windows 10/11
+- **Processador**: Qualcomm Snapdragon X (recomendado)
+- **Câmera**: Webcam funcional
+- **Python**: 3.8+
+- **RAM**: 4GB mínimo
 
-### Executando a aplicação
+## 📊 Tecnologias Utilizadas
 
-1. Execute o código:
-    ```sh
-    npm start
-    ```
+- **Backend**: Flask, SocketIO
+- **IA**: MediaPipe, OpenCV
+- **Frontend**: HTML5, CSS3, JavaScript
+- **Visualização**: Plotly, Chart.js
+- **Otimização**: Qualcomm Snapdragon X
 
-2. Acessando a aplicação:
-    - Adicione aqio
+## 🤝 Contribuição
 
+1. Fork o projeto
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Abra um Pull Request
 
-## 📋 Licença
+## 📄 Licença
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-### Licença MIT
+## 🆘 Suporte
+
+Para dúvidas ou problemas:
+- Abra uma issue no GitHub
+- Consulte a documentação em `/docs`
+- Verifique o [QUICK_START.md](QUICK_START.md)
+
+---
+
+**Desenvolvido para o Edge AI Hackathon - Qualcomm**
 

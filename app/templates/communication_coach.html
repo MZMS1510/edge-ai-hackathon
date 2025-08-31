@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Practice - Qualcomm Edge AI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="/static/css/history.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.8em;
+            font-weight: 300;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        
+        .header .subtitle {
+            background: #f8f9ff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .video-section {
+            text-align: center;
+        }
+        
+        .video-container {
+            background: #000;
+            border-radius: 15px;
+            padding: 20px;
+            display: inline-block;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .video-feed {
+            width: 640px;
+            height: 480px;
+            border-radius: 10px;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-feed video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        .video-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        /* Canvas para desenhar landmarks */
+        .landmarks-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .feedback-panel {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e0e6ff;
+            height: fit-content;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .feedback-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .metrics-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e0e6ff;
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .metric-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .feedback-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .feedback-item {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .feedback-item:before {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        
+        .feedback-good {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .feedback-good:before {
+            content: "✅";
+        }
+        
+        .feedback-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .feedback-warning:before {
+            content: "⚠️";
+        }
+        
+        .feedback-bad {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .feedback-bad:before {
+            content: "❌";
+        }
+        
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn.stop {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        /* Controles de visualização */
+        .visualization-controls {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border: 1px solid #e0e6ff;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .control-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .control-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #667eea;
+        }
+        
+        .control-label input[type="range"] {
+            width: 80px;
+            accent-color: #667eea;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-active {
+            background: #28a745;
+        }
+        
+        .status-inactive {
+            background: #dc3545;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Botão do histórico */
+        .history-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 999;
+            transition: all 0.3s ease;
+        }
+        
+        .history-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .history-toggle .badge {
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        /* Progress bar */
+        .progress-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e6ff;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .video-feed {
+                width: 100%;
+                max-width: 500px;
+                height: 375px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .metrics-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .video-feed {
+                width: 100%;
+                max-width: 400px;
+                height: 300px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão do histórico -->
+    <button class="history-toggle" id="history-toggle">
+        📊 Histórico
+        <span class="badge" id="history-count">0</span>
+    </button>
+    
+    <!-- Painel do histórico -->
+    <div class="history-panel" id="history-panel">
+        <div class="history-header">
+            <h2>📊 Histórico de Pitch Practice</h2>
+            <button class="history-close" id="history-close" onclick="historyManager.closeHistoryPanel()">×</button>
+        </div>
+        <div class="history-content">
+            <div id="history-statistics">
+                <!-- Estatísticas serão inseridas aqui -->
+            </div>
+            <div class="history-actions">
+                <button class="btn-view" id="export-history">
+                    📤 Exportar Histórico
+                </button>
+            </div>
+            <div id="history-list">
+                <!-- Lista de análises será inserida aqui -->
+            </div>
+            
+            <!-- Botão de fechar adicional na parte inferior -->
+            <button class="history-close-bottom" onclick="historyManager.closeHistoryPanel()">
+                ❌ Fechar Histórico
+            </button>
+        </div>
+    </div>
+    
+    <!-- Botão de fechar flutuante -->
+    <button class="history-close-float" id="history-close-float" onclick="historyManager.closeHistoryPanel()">
+        ❌ Fechar
+    </button>
+    
+    <!-- Conteúdo principal do Pitch Practice -->
+    <div class="container">
+        <div class="header">
+            <h1>🎤 Pitch Practice</h1>
+            <p>Aprimore suas habilidades de apresentação com IA em tempo real</p>
+            <div class="subtitle">Análise de postura, gestos e contato visual</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <div class="video-feed" id="videoFeed">
+                        <div class="video-overlay" id="videoOverlay">
+                            <span class="status-indicator status-inactive" id="statusIndicator"></span>
+                            Status: Aguardando
+                        </div>
+                        
+                        <div id="videoPlaceholder">
+                            Clique em "Iniciar Pitch Practice" para começar
+                        </div>
+                        <video id="videoElement" autoplay muted style="display: none;"></video>
+                        <canvas id="landmarksCanvas" class="landmarks-canvas"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Barra de progresso -->
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Aguardando início da sessão...</div>
+                </div>
+            </div>
+            
+            <div class="feedback-panel">
+                <div class="feedback-title">💡 Feedback em Tempo Real</div>
+                
+                <div class="metrics-section">
+                    <div class="metric-card">
+                        <div class="metric-value" id="overallScore">--</div>
+                        <div class="metric-label">Score Geral</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="postureScore">--</div>
+                        <div class="metric-label">Postura</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="gestureScore">--</div>
+                        <div class="metric-label">Gestos</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="eyeContactScore">--</div>
+                        <div class="metric-label">Contato Visual</div>
+                    </div>
+                </div>
+                
+                <ul class="feedback-list" id="feedbackList">
+                    <li class="feedback-item feedback-good">Aguardando análise...</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startAnalysis()">
+                🎤 Iniciar Pitch Practice
+            </button>
+            <button class="btn stop" id="stopBtn" onclick="stopAnalysis()" disabled>
+                🛑 Finalizar Sessão
+            </button>
+            <button class="btn reset" id="resetBtn" onclick="resetState()" style="background: #6c757d;">
+                🔄 Resetar Estado
+            </button>
+            <button class="btn test" id="testBtn" onclick="testVisualization()" style="background: #17a2b8;">
+                🧪 Testar Visualização
+            </button>
+            <button class="btn test" id="testMediaPipeBtn" onclick="testMediaPipe()" style="background: #28a745;">
+                🔍 Testar MediaPipe
+            </button>
+            
+            <!-- Controles de visualização -->
+            <div class="visualization-controls">
+                <label class="control-label">
+                    <input type="checkbox" id="showLandmarks" checked> Mostrar Landmarks
+                </label>
+                <label class="control-label">
+                    <input type="range" id="pointSize" min="2" max="8" value="4" step="1"> Tamanho dos Pontos
+                </label>
+                <label class="control-label">
+                    <input type="range" id="lineWidth" min="1" max="5" value="2" step="1"> Espessura das Linhas
+                </label>
+                <label class="control-label">
+                    <input type="range" id="smoothing" min="0" max="10" value="7" step="1"> Suavização
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/static/js/history_manager.js"></script>
+    <script src="/static/js/landmarks_visualizer.js"></script>
+    <script>
+        // Socket.IO
+        const socket = io();
+        
+        let isAnalyzing = false;
+        let videoStream = null;
+        let landmarksVisualizer = null;
+        let sessionStartTime = null;
+        let sessionDuration = 0;
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            setupSocketIO();
+            setupVideoStream();
+            setupLandmarksVisualizer();
+            setupVisualizationControls();
+            updateHistoryCount();
+        });
+        
+        function setupLandmarksVisualizer() {
+            landmarksVisualizer = new LandmarksVisualizer('landmarksCanvas');
+            console.log('Landmarks Visualizer inicializado');
+        }
+        
+        function setupVisualizationControls() {
+            // Controle de mostrar/ocultar landmarks
+            document.getElementById('showLandmarks').addEventListener('change', function(e) {
+                if (landmarksVisualizer) {
+                    if (e.target.checked) {
+                        landmarksVisualizer.start();
+                    } else {
+                        landmarksVisualizer.stop();
+                    }
+                }
+            });
+            
+            // Controle de tamanho dos pontos
+            document.getElementById('pointSize').addEventListener('input', function(e) {
+                if (landmarksVisualizer) {
+                    landmarksVisualizer.updateConfig({ pointRadius: parseInt(e.target.value) });
+                }
+            });
+            
+            // Controle de espessura das linhas
+            document.getElementById('lineWidth').addEventListener('input', function(e) {
+                if (landmarksVisualizer) {
+                    landmarksVisualizer.updateConfig({ lineWidth: parseInt(e.target.value) });
+                }
+            });
+            
+            // Controle de suavização
+            document.getElementById('smoothing').addEventListener('input', function(e) {
+                if (landmarksVisualizer) {
+                    const smoothingValue = parseInt(e.target.value) / 10;
+                    landmarksVisualizer.updateConfig({ smoothingFactor: smoothingValue });
+                }
+            });
+            
+            console.log('Controles de visualização configurados');
+        }
+        
+        function setupSocketIO() {
+            socket.on('connect', function() {
+                console.log('Conectado ao Pitch Practice');
+            });
+            
+            socket.on('disconnect', function() {
+                console.log('Desconectado do Pitch Practice');
+            });
+            
+            socket.on('communication_data', function(data) {
+                updateMetrics(data);
+            });
+            
+            // Novo evento para landmarks
+            socket.on('landmarks_data', function(data) {
+                console.log('📊 Landmarks recebidos:', data);
+                if (landmarksVisualizer && isAnalyzing) {
+                    console.log('🎨 Desenhando landmarks...');
+                    landmarksVisualizer.drawLandmarks(data);
+                } else {
+                    console.log('⚠️ Não desenhando landmarks:', {
+                        visualizer: !!landmarksVisualizer,
+                        analyzing: isAnalyzing
+                    });
+                }
+            });
+        }
+        
+        // Funções de visualização agora gerenciadas pelo LandmarksVisualizer
+        
+        async function setupVideoStream() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: 640, 
+                        height: 480,
+                        facingMode: 'user'
+                    } 
+                });
+                
+                const videoElement = document.getElementById('videoElement');
+                videoElement.srcObject = videoStream;
+                
+                console.log('Câmera configurada');
+            } catch (error) {
+                console.error('Erro ao acessar câmera:', error);
+                document.getElementById('videoPlaceholder').textContent = 
+                    'Erro ao acessar câmera. Verifique as permissões.';
+            }
+        }
+        
+        function startAnalysis() {
+            if (!videoStream) {
+                alert('Câmera não disponível. Verifique as permissões.');
+                return;
+            }
+            
+            fetch('/start_coaching')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isAnalyzing = true;
+                        sessionStartTime = Date.now();
+                        updateControls();
+                        updateVideoDisplay();
+                        startProgressTimer();
+                        
+                        // Iniciar visualização de landmarks
+                        if (landmarksVisualizer) {
+                            console.log('🎬 Iniciando visualização de landmarks...');
+                            landmarksVisualizer.start();
+                        } else {
+                            console.log('❌ LandmarksVisualizer não está disponível');
+                        }
+                        
+                        console.log('Pitch Practice iniciado');
+                    } else {
+                        alert('Erro ao iniciar Pitch Practice: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao iniciar Pitch Practice');
+                });
+        }
+        
+        function stopAnalysis() {
+            fetch('/stop_coaching')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isAnalyzing = false;
+                        updateControls();
+                        updateVideoDisplay();
+                        stopProgressTimer();
+                        console.log('Pitch Practice finalizado');
+                    } else {
+                        console.error('Erro ao parar análise:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                });
+        }
+        
+        function resetState() {
+            fetch('/reset')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isAnalyzing = false;
+                        updateControls();
+                        updateVideoDisplay();
+                        stopProgressTimer();
+                        console.log('Estado do sistema resetado');
+                        alert('Estado do sistema resetado com sucesso!');
+                    } else {
+                        console.error('Erro ao resetar estado:', data.error);
+                        alert('Erro ao resetar estado: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro de conexão ao resetar estado');
+                });
+        }
+        
+        function testVisualization() {
+            if (landmarksVisualizer) {
+                console.log('🧪 Iniciando teste de visualização...');
+                landmarksVisualizer.testVisualization();
+                alert('Teste de visualização executado! Verifique o console para detalhes.');
+            } else {
+                console.error('❌ LandmarksVisualizer não está disponível');
+                alert('Visualizador não está disponível. Verifique se a página foi carregada corretamente.');
+            }
+        }
+        
+        function testMediaPipe() {
+            console.log('🔍 Testando MediaPipe...');
+            fetch('/test_mediapipe')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`✅ ${data.message}`);
+                        console.log('MediaPipe funcionando:', data);
+                    } else {
+                        alert(`⚠️ ${data.message}`);
+                        console.log('MediaPipe não detectou landmarks:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao testar MediaPipe:', error);
+                    alert('Erro ao testar MediaPipe. Verifique o console para detalhes.');
+                });
+        }
+        
+        function updateControls() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const testBtn = document.getElementById('testBtn');
+            const testMediaPipeBtn = document.getElementById('testMediaPipeBtn');
+            
+            if (isAnalyzing) {
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                resetBtn.disabled = true;
+                testBtn.disabled = true;
+                testMediaPipeBtn.disabled = true;
+            } else {
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                resetBtn.disabled = false;
+                testBtn.disabled = false;
+                testMediaPipeBtn.disabled = false;
+            }
+        }
+        
+        function updateVideoDisplay() {
+            const videoElement = document.getElementById('videoElement');
+            const videoPlaceholder = document.getElementById('videoPlaceholder');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const videoOverlay = document.getElementById('videoOverlay');
+            
+            if (isAnalyzing) {
+                videoElement.style.display = 'block';
+                videoPlaceholder.style.display = 'none';
+                statusIndicator.className = 'status-indicator status-active';
+                videoOverlay.innerHTML = '<span class="status-indicator status-active"></span>Pitch Practice Ativo';
+            } else {
+                videoElement.style.display = 'none';
+                videoPlaceholder.style.display = 'flex';
+                videoPlaceholder.textContent = 'Clique em "Iniciar Pitch Practice" para começar';
+                statusIndicator.className = 'status-indicator status-inactive';
+                videoOverlay.innerHTML = '<span class="status-indicator status-inactive"></span>Status: Aguardando';
+                
+                // Limpar visualização quando parar
+                if (landmarksVisualizer) {
+                    landmarksVisualizer.stop();
+                }
+            }
+        }
+        
+        function startProgressTimer() {
+            sessionDuration = 0;
+            updateProgress();
+            progressInterval = setInterval(updateProgress, 1000);
+        }
+        
+        function stopProgressTimer() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+        }
+        
+        function updateProgress() {
+            if (isAnalyzing) {
+                sessionDuration++;
+                const minutes = Math.floor(sessionDuration / 60);
+                const seconds = sessionDuration % 60;
+                const progressText = document.getElementById('progressText');
+                progressText.textContent = `Sessão em andamento: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        function updateMetrics(data) {
+            // Atualizar métricas
+            document.getElementById('overallScore').textContent = Math.round(data.overall_score);
+            document.getElementById('postureScore').textContent = Math.round(data.posture_score);
+            document.getElementById('gestureScore').textContent = Math.round(data.gesture_score);
+            document.getElementById('eyeContactScore').textContent = Math.round(data.eye_contact_score);
+            
+            // Atualizar feedback
+            updateFeedback(data.feedback);
+        }
+        
+        function updateFeedback(feedbackList) {
+            const feedbackListElement = document.getElementById('feedbackList');
+            feedbackListElement.innerHTML = '';
+            
+            feedbackList.forEach(feedback => {
+                const li = document.createElement('li');
+                li.textContent = feedback.replace('🟢', '').replace('🟡', '').replace('🔴', '');
+                
+                if (feedback.includes('🟢')) {
+                    li.className = 'feedback-item feedback-good';
+                } else if (feedback.includes('🟡')) {
+                    li.className = 'feedback-item feedback-warning';
+                } else if (feedback.includes('🔴')) {
+                    li.className = 'feedback-item feedback-bad';
+                }
+                
+                feedbackListElement.appendChild(li);
+            });
+        }
+        
+        // Atualizar contador do histórico
+        function updateHistoryCount() {
+            const count = historyManager.historyData.length;
+            document.getElementById('history-count').textContent = count;
+        }
+        
+        // Atualizar contador quando histórico for carregado
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(updateHistoryCount, 1000);
+        });
+    </script>
+</body>
+</html>
