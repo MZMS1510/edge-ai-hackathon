@@ -2,16 +2,34 @@
 
 ## Nome da Solução: Pitch Pract
 ### Nome do grupo: Coditores
-####  Integrantes: <div align="center">
+####  Integrantes:<div align="center">
   <table>
     <tr>
-     <td align="center"><a href="https://www.linkedin.com/in/ana-cristina-jardim/"><sub><b>Ana Cristina</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/carlosicaro"><sub><b>Carlos Icaro</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/ifelipemartins"><sub><b>Felipe Martins</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/gustavo-martinsg"><sub><b>Gustavo Martins</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/lavinia-mendonca/"><sub><b>Lavinia Mendonça</b></sub></a></td>
-     <td align="center"><a href="https://www.linkedin.com/in/marcos-vinicius-m-silva/"></a></td>
-       <td align="center"><a href="https://www.linkedin.com/in/marcos-vinicius-m-silva/"><sub><b>Marcos Marcondes</b></sub></a></td>
+     <td align="center">
+       <a href="https://www.linkedin.com/in/ana-cristina-jardim/"><sub><b>Ana Cristina</b></sub></a><br>
+       <span>ana.jardim@sou.inteli.edu.br</span>
+     </td>
+     <td align="center">
+       <a href="https://www.linkedin.com/in/carlosicaro"><sub><b>Carlos Icaro</b></sub></a><br>
+       <span>carlosicaro13@gmail.com</span>
+     </td>
+     <td align="center">
+       <a href="https://www.linkedin.com/in/ifelipemartins"><sub><b>Felipe Martins</b></sub></a><br>
+       <span>profissional.felipemartins@gmail.com</span>
+     </td>
+     <td align="center">
+       <a href="https://www.linkedin.com/in/gustavo-martinsg"><sub><b>Gustavo Martins</b></sub></a><br>
+       <span>gustavome896@gmail.com</span>
+     </td>
+     <td align="center">
+       <a href="https://www.linkedin.com/in/lavinia-mendonca/"><sub><b>Lavinia Mendonça</b></sub></a><br>
+       <span>lavinia.mendonca@sou.ineli.edu.br</span>
+     </td>
+     <td align="center">
+       <a href="https://www.linkedin.com/in/marcos-vinicius-m-silva/"><sub><b>Marcos Marcondes</b></sub></a><br>
+       <span>msmarcondes10@gmail.com</span>
+     </td>
+  </tr>
   </table>
 </div>
 
@@ -20,15 +38,11 @@
 
 [2. Objetivos e Justificativa](#c2)
 
-[3. Metodologia](#c3)
+[3.Desenvolvimento e Resultados](#c3)
 
-[4. Desenvolvimento e Resultados](#c4)
+[4. Conclusões e Recomendações](#c4)
 
-[5. Conclusões e Recomendações](#c5)
-
-[6. Referências](#c6)
-
-[Anexos](#attachments)
+[5. Referências](#c5)
 
 
 ## <a name="c1"></a>1. Introdução
@@ -48,7 +62,7 @@
 
 &emsp;A proposta se justifica pelo potencial de transformar o treinamento de comunicação em pitches e apresentações, tornando-o mais seguro, acessível e eficaz. Diferente de treinamentos tradicionais, que são caros e muitas vezes expõem o indivíduo a julgamentos e vazamento de dados, esta solução permite que líderes, executivos e empreendedores pratiquem em ambientes privados, recebendo feedback de IA sobre postura, entonação, ritmo e linguagem não verbal. Ao rodar localmente em dispositivos equipados com Snapdragon, a ferramenta garante privacidade total, reduz custos e pode ser utilizada mesmo em locais com pouca ou nenhuma conexão de rede, aumentando seu alcance. Seu diferencial está na integração entre análise de voz, gestos e simulações realistas, criando uma experiência de treinamento completa e realista que combina performance, aprendizado e segurança de forma completa e eficiente. 
 
-## <a name="c4"></a>3. Desenvolvimento e Resultados
+## <a name="c3"></a>3. Desenvolvimento e Resultados
 
 ### 3.1.1. Planejamento Geral da Solução
 
@@ -105,7 +119,7 @@ e) Qual será o critério de sucesso.
 </div>
 
 
-## <a name="c5"></a>4. Conclusões e Recomendações
+## <a name="c4"></a>4. Conclusões e Recomendações
 
 
 &emsp;O projeto Pitch Pract demonstrou que é possível criar uma ferramenta para aprimoramento de habilidades de comunicação, utilizando inteligência artificial e Edge Computing para garantir privacidade, acessibilidade e feedback objetivo. Os principais resultados incluem o desenvolvimento de um aplicativo capaz de analisar postura, entonação, ritmo de fala e linguagem não verbal, fornecendo métricas visuais e recomendações personalizadas para o usuário. A solução se mostrou eficaz ao permitir treinamentos realistas sem dependência de instrutores presenciais ou serviços em nuvem, ampliando o acesso e reduzindo custos.
@@ -113,7 +127,7 @@ e) Qual será o critério de sucesso.
 
 &emsp;Recomenda-se a adoção do modelo em ambientes corporativos, educacionais e para empreendedores que buscam melhorar sua performance em apresentações e pitches. É importante garantir que os usuários recebam orientações claras sobre o uso da ferramenta e sobre a interpretação dos resultados, promovendo o desenvolvimento ético e estratégico das habilidades comunicativas. 
 
-## <a name="c6"></a>5. Referências
+## <a name="c5"></a>5. Referências
 
 
 ALMEIDA, J. The Importance of a Business Pitch. FasterCapital, 2025. Disponível em: <https://fastercapital.com/content/The-Importance-of-a-Business-Pitch.html>. Acesso em: 31 ago. 2025.
