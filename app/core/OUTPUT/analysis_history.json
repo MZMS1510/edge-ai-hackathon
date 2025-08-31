@@ -398,9 +398,85 @@
       "strengths_count": 0,
       "weaknesses_count": 3,
       "recommendations_count": 4
+    },
+    {
+      "id": "analysis_22",
+      "timestamp": "2025-08-31T10:56:02.400797",
+      "date": "31/08/2025",
+      "time": "10:56",
+      "duration_minutes": 0.6,
+      "overall_score": 65.1,
+      "performance_level": "Regular",
+      "total_frames": 30,
+      "report_file": "analysis_report_20250831_105602.json",
+      "summary": {
+        "posture": 75.2,
+        "gesture": 35.4,
+        "eye_contact": 80.4
+      },
+      "strengths_count": 2,
+      "weaknesses_count": 1,
+      "recommendations_count": 1
+    },
+    {
+      "id": "analysis_23",
+      "timestamp": "2025-08-31T11:16:33.397495",
+      "date": "31/08/2025",
+      "time": "11:16",
+      "duration_minutes": 0.4,
+      "overall_score": 64.6,
+      "performance_level": "Regular",
+      "total_frames": 20,
+      "report_file": "analysis_report_20250831_111633.json",
+      "summary": {
+        "posture": 74.8,
+        "gesture": 35.0,
+        "eye_contact": 79.8
+      },
+      "strengths_count": 1,
+      "weaknesses_count": 1,
+      "recommendations_count": 1
+    },
+    {
+      "id": "analysis_24",
+      "timestamp": "2025-08-31T11:16:52.302066",
+      "date": "31/08/2025",
+      "time": "11:16",
+      "duration_minutes": 0.1,
+      "overall_score": 64.3,
+      "performance_level": "Regular",
+      "total_frames": 8,
+      "report_file": "analysis_report_20250831_111652.json",
+      "summary": {
+        "posture": 73.8,
+        "gesture": 35.0,
+        "eye_contact": 79.9
+      },
+      "strengths_count": 1,
+      "weaknesses_count": 1,
+      "recommendations_count": 1
+    },
+    {
+      "id": "analysis_25",
+      "timestamp": "2025-08-31T11:17:09.297420",
+      "date": "31/08/2025",
+      "time": "11:17",
+      "duration_minutes": 0.0,
+      "overall_score": 65.2,
+      "performance_level": "Regular",
+      "total_frames": 3,
+      "report_file": "analysis_report_20250831_111709.json",
+      "summary": {
+        "posture": 74.8,
+        "gesture": 35.7,
+        "eye_contact": 80.8
+      },
+      "strengths_count": 1,
+      "weaknesses_count": 1,
+      "recommendations_count": 1
     }
   ],
-  "total_analyses": 21,
-  "last_updated": "2025-08-31T10:45:05.718455",
+  "total_analyses": 25,
+  "last_updated": "2025-08-31T11:17:09.297420",
   "created_date": "2025-08-31T09:27:31.925664"
 }

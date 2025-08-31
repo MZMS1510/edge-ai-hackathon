@@ -108,10 +108,10 @@ class CommunicationAnalyzer:
         return smoothed
         
     def analyze_posture(self, pose_results, last_score=None):
-        """Analisa postura com scores ultra generosos e estabilidade"""
+        """Analisa postura com thresholds rigorosos baseados no modelo treinado"""
         if not pose_results.pose_landmarks:
-            # Score estável quando não detecta
-            base_score = 75 + np.random.normal(0, 3)
+            # Score baixo quando não detecta pose
+            base_score = 30 + np.random.normal(0, 5)
             return self.smooth_score(base_score, 'posture')
         
         landmarks = pose_results.pose_landmarks.landmark
@@ -127,23 +127,21 @@ class CommunicationAnalyzer:
             shoulder_angle = abs(left_shoulder.y - right_shoulder.y)
             hip_angle = abs(left_hip.y - right_hip.y)
             
-            # Calcular postura ereta
-            spine_alignment = abs((left_shoulder.y + right_shoulder.y) / 2 - 
-                                (left_hip.y + right_hip.y) / 2)
+            # Calcular postura ereta usando a lógica corrigida
+            natural_spine_distance = 0.2  # Distância natural entre ombros e quadris
+            spine_deviation = abs(abs((left_shoulder.y + right_shoulder.y) / 2 - 
+                                    (left_hip.y + right_hip.y) / 2) - natural_spine_distance)
             
-            # Scores ultra generosos com thresholds muito tolerantes
-            shoulder_score = max(0, 100 - (shoulder_angle / self.config['posture']['shoulder_threshold']) * 30)
-            hip_score = max(0, 100 - (hip_angle / self.config['posture']['hip_threshold']) * 30)
-            spine_score = max(0, 100 - (spine_alignment / self.config['posture']['spine_threshold']) * 30)
+            # Scores rigorosos baseados nos thresholds treinados
+            shoulder_score = max(0, 100 - (shoulder_angle / self.config['posture']['shoulder_threshold']) * 50)
+            hip_score = max(0, 100 - (hip_angle / self.config['posture']['hip_threshold']) * 50)
+            spine_score = max(0, 100 - (spine_deviation / self.config['posture']['spine_threshold']) * 50)
             
             base_score = (shoulder_score + hip_score + spine_score) / 3
             
-            # Bonus muito generoso para postura naturalmente boa
-            if base_score > 50:
-                base_score += 15
-            
-            # Bonus adicional por detectar pose
-            base_score += 10
+            # Penalidade por postura ruim
+            if base_score < 40:
+                base_score -= 10
             
             # Variação dinâmica reduzida para estabilidade
             movement_variation = np.random.normal(0, self.config['posture']['variation_factor'])
@@ -155,51 +153,57 @@ class CommunicationAnalyzer:
             
         except Exception as e:
             print(f"Erro na análise de postura: {e}")
-            base_score = 75 + np.random.normal(0, 2)
+            base_score = 30 + np.random.normal(0, 5)
             return self.smooth_score(base_score, 'posture')
 
     def analyze_gestures(self, hands_results, last_score=None):
-        """Analisa gestos com scores ultra generosos e estabilidade"""
+        """Analisa gestos com lógica correta baseada no movimento real"""
         if not hands_results.multi_hand_landmarks:
-            # Score estável quando não detecta mãos
-            base_score = self.config['gesture']['base_score_no_hands'] + np.random.normal(0, 2)
+            # Score baixo quando não detecta mãos (sem gestos)
+            base_score = 30 + np.random.normal(0, 5)
             return self.smooth_score(base_score, 'gesture')
         
         try:
-            gesture_score = 0
+            total_movement = 0
             hand_count = len(hands_results.multi_hand_landmarks)
-            
-            # Bonus base muito generoso apenas por detectar mãos
-            gesture_score += 75
             
             for hand_landmarks in hands_results.multi_hand_landmarks:
                 # Analisar posição das mãos
                 wrist = hand_landmarks.landmark[self.mp_hands.HandLandmark.WRIST]
                 thumb_tip = hand_landmarks.landmark[self.mp_hands.HandLandmark.THUMB_TIP]
                 index_tip = hand_landmarks.landmark[self.mp_hands.HandLandmark.INDEX_FINGER_TIP]
+                middle_tip = hand_landmarks.landmark[self.mp_hands.HandLandmark.MIDDLE_FINGER_TIP]
                 
-                # Calcular movimento das mãos (thresholds ultra baixos)
-                hand_movement = abs(wrist.y - thumb_tip.y) + abs(wrist.y - index_tip.y)
+                # Calcular movimento real das mãos (distância entre dedos e pulso)
+                hand_movement = (abs(wrist.y - thumb_tip.y) + 
+                               abs(wrist.y - index_tip.y) + 
+                               abs(wrist.y - middle_tip.y)) / 3
                 
-                # Scores ultra generosos com thresholds ultra baixos
-                if hand_movement > self.config['gesture']['movement_threshold_high']:
-                    gesture_score += 95 + np.random.normal(0, 1)
-                elif hand_movement > self.config['gesture']['movement_threshold_low']:
-                    gesture_score += 85 + np.random.normal(0, 1.5)
-                else:
-                    gesture_score += 75 + np.random.normal(0, 2)
+                total_movement += hand_movement
             
-            base_score = min(100, gesture_score / hand_count) if hand_count > 0 else self.config['gesture']['base_score_no_hands']
+            # Calcular movimento médio por mão
+            avg_movement = total_movement / hand_count if hand_count > 0 else 0
             
-            # Bonus ultra generoso para múltiplas mãos detectadas
+            # Scores baseados no movimento real
+            if avg_movement > self.config['gesture']['movement_threshold_high']:
+                # Muito movimento = bons gestos
+                base_score = 85 + np.random.normal(0, 5)
+            elif avg_movement > self.config['gesture']['movement_threshold_low']:
+                # Movimento moderado = gestos regulares
+                base_score = 65 + np.random.normal(0, 8)
+            else:
+                # Pouco movimento = gestos limitados
+                base_score = 40 + np.random.normal(0, 10)
+            
+            # Penalidade por estar parado (mãos detectadas mas sem movimento)
+            if avg_movement < 0.01:  # Muito pouco movimento
+                base_score -= 20
+            
+            # Bonus para múltiplas mãos (mais expressividade)
             if hand_count >= 2:
-                base_score += 20
+                base_score += 10
             
-            # Bonus adicional para qualquer movimento detectado
-            if hand_count > 0:
-                base_score += 15
-            
-            # Variação dinâmica reduzida para estabilidade
+            # Variação dinâmica
             time_variation = np.random.normal(0, self.config['gesture']['variation_factor'])
             final_score = max(self.config['gesture']['min_score'], 
                              min(self.config['gesture']['max_score'], 
@@ -209,51 +213,46 @@ class CommunicationAnalyzer:
             
         except Exception as e:
             print(f"Erro na análise de gestos: {e}")
-            base_score = 80 + np.random.normal(0, 2)
+            base_score = 30 + np.random.normal(0, 5)
             return self.smooth_score(base_score, 'gesture')
 
     def analyze_eye_contact(self, frame, face_results, last_score=None):
-        """Analisa contato visual com scores ultra generosos e estabilidade"""
-        if not face_results.multi_face_landmarks:
-            # Score estável quando não detecta rosto
-            base_score = 80 + np.random.normal(0, 3)
+        """Analisa contato visual com thresholds rigorosos"""
+        if not face_results.detections:
+            # Score baixo quando não detecta rosto
+            base_score = 30 + np.random.normal(0, 5)
             return self.smooth_score(base_score, 'eye')
         
         try:
-            # Pontos dos olhos
-            left_eye = face_results.multi_face_landmarks[0].landmark[33]
-            right_eye = face_results.multi_face_landmarks[0].landmark[133]
-            
-            # Calcular posição dos olhos em relação ao centro da tela
+            # Usar detecção de rosto simples
             frame_height, frame_width = frame.shape[:2]
             center_x = frame_width / 2
             center_y = frame_height / 2
             
-            eye_center_x = (left_eye.x + right_eye.x) / 2 * frame_width
-            eye_center_y = (left_eye.y + right_eye.y) / 2 * frame_height
+            # Calcular posição do rosto detectado
+            detection = face_results.detections[0]
+            bbox = detection.location_data.relative_bounding_box
+            
+            face_center_x = (bbox.xmin + bbox.width / 2) * frame_width
+            face_center_y = (bbox.ymin + bbox.height / 2) * frame_height
             
             # Distância do centro
-            distance_from_center = np.sqrt((eye_center_x - center_x)**2 + (eye_center_y - center_y)**2)
+            distance_from_center = np.sqrt((face_center_x - center_x)**2 + (face_center_y - center_y)**2)
             
             # Score baseado na proximidade do centro
             max_distance = np.sqrt(center_x**2 + center_y**2)
             normalized_distance = distance_from_center / max_distance
             
-            # Scores ultra generosos com tolerância ultra aumentada
+            # Scores rigorosos baseados na distância do centro
             if normalized_distance < self.config['eye_contact']['center_tolerance']:
-                base_score = 98 + np.random.normal(0, 1)
-            elif normalized_distance < 0.7:
-                base_score = 90 + np.random.normal(0, 1.5)
+                base_score = 85 + np.random.normal(0, 3)
+            elif normalized_distance < 0.5:
+                base_score = 70 + np.random.normal(0, 5)
             else:
-                base_score = 80 + np.random.normal(0, 2)
+                base_score = 50 + np.random.normal(0, 8)
             
-            # Bonus por detectar rosto (mesmo que não esteja no centro)
-            base_score += 15
-            
-            # Variação baseada no movimento dos olhos reduzida
-            eye_movement = abs(left_eye.x - right_eye.x) + abs(left_eye.y - right_eye.y)
-            movement_variation = np.random.normal(0, self.config['eye_contact']['variation_factor']) * eye_movement * self.config['eye_contact']['movement_factor']
-            
+            # Variação dinâmica
+            movement_variation = np.random.normal(0, self.config['eye_contact']['variation_factor'])
             final_score = max(self.config['eye_contact']['min_score'], 
                              min(self.config['eye_contact']['max_score'], 
                                  base_score + movement_variation))
@@ -262,33 +261,33 @@ class CommunicationAnalyzer:
             
         except Exception as e:
             print(f"Erro na análise de contato visual: {e}")
-            base_score = 80 + np.random.normal(0, 2)
+            base_score = 30 + np.random.normal(0, 5)
             return self.smooth_score(base_score, 'eye')
 
     def generate_feedback(self, posture_score, gesture_score, eye_contact_score):
-        """Gera feedback personalizado com thresholds ultra generosos"""
+        """Gera feedback personalizado com thresholds rigorosos baseados no modelo treinado"""
         feedback = []
         
-        # Feedback de postura com thresholds ultra generosos
-        if posture_score < 40:  # Reduzido de 60 para 40
-            feedback.append("🔴 Mantenha a postura ereta - alinhe os ombros")
-        elif posture_score < 65:  # Reduzido de 80 para 65
-            feedback.append("🟡 Melhore levemente o alinhamento dos ombros")
+        # Feedback de postura com thresholds rigorosos
+        if posture_score < self.config['feedback_thresholds']['posture']['poor']:
+            feedback.append("🔴 Postura precisa de melhoria - alinhe os ombros e mantenha a coluna reta")
+        elif posture_score < self.config['feedback_thresholds']['posture']['good']:
+            feedback.append("🟡 Postura regular - melhore o alinhamento dos ombros")
         else:
             feedback.append("🟢 Postura excelente!")
         
-        # Feedback de gestos com thresholds ultra generosos
-        if gesture_score < 45:  # Reduzido de 60 para 45
+        # Feedback de gestos com thresholds rigorosos
+        if gesture_score < self.config['feedback_thresholds']['gesture']['poor']:
             feedback.append("🔴 Use mais gestos com as mãos para expressividade")
-        elif gesture_score < 70:  # Reduzido de 85 para 70
+        elif gesture_score < self.config['feedback_thresholds']['gesture']['good']:
             feedback.append("🟡 Varie seus gestos para maior impacto")
         else:
             feedback.append("🟢 Gestos muito expressivos!")
         
-        # Feedback de contato visual com thresholds ultra generosos
-        if eye_contact_score < 50:  # Reduzido de 70 para 50
+        # Feedback de contato visual com thresholds rigorosos
+        if eye_contact_score < self.config['feedback_thresholds']['eye_contact']['poor']:
             feedback.append("👁️ Olhe mais para a câmera - mantenha contato visual")
-        elif eye_contact_score < 75:  # Reduzido de 90 para 75
+        elif eye_contact_score < self.config['feedback_thresholds']['eye_contact']['good']:
             feedback.append("🟡 Mantenha contato visual consistente")
         else:
             feedback.append("🟢 Contato visual perfeito!")
