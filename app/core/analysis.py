@@ -377,3 +377,9 @@ class CommunicationAnalyzer:
                     'trend': 'improving' if len(scores) > 10 and scores[-1] > np.mean(scores[-10:]) else 'stable'
                 }
         return stats
+
+    def reset_scores(self):
+        """Reseta os scores e histórico"""
+        self.last_scores = {'posture': 75, 'gesture': 80, 'eye': 85}
+        self.score_history = {'posture': [], 'gesture': [], 'eye': []}
+        print("🔄 Scores resetados com sucesso!")

@@ -21,7 +21,7 @@ def test_real_time_analysis():
     # Inicializar MediaPipe
     mp_pose = mp.solutions.pose
     mp_hands = mp.solutions.hands
-    mp_face = mp.solutions.face_detection
+    mp_face = mp.solutions.face_mesh
     mp_drawing = mp.solutions.drawing_utils
     
     pose = mp_pose.Pose(
@@ -41,9 +41,12 @@ def test_real_time_analysis():
         min_tracking_confidence=0.5
     )
     
-    face = mp_face.FaceDetection(
-        model_selection=0,
-        min_detection_confidence=0.5
+    face = mp_face.FaceMesh(
+        static_image_mode=False,
+        max_num_faces=1,
+        refine_landmarks=True,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5
     )
     
     # Inicializar analisador
