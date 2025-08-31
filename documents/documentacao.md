@@ -36,25 +36,16 @@ Remova este bloco ao final
 
 ## <a name="c2"></a>2. Objetivos e Justificativa
 ### 2.1 Objetivos
-```
-Descreva resumidamente os objetivos gerais e específicos do seu parceiro de negócios.
 
-Remova este bloco ao final
-```
+&emsp;O objetivo geral deste projeto é criar uma solução inovadora que permita a líderes de área, executivos e empreendedores aprimorar suas habilidades de comunicação em pitches e apresentações, oferecendo um treinamento privado, seguro e altamente interativo. Entre os objetivos específicos, fornecer feedback sobre postura, entonação, ritmo de fala e linguagem não verbal, detectar sinais de nervosismo, como tremores ou aceleração da fala; e apresentar métricas visuais de performance por meio de dashboards que auxiliem no acompanhamento do desenvolvimento são as principais propostas da aplicação. A solução se diferencia ao utilizar Edge Computing e inteligência artificial para oferecer essa análise totalmente on-device, garantindo privacidade e eliminando o julgamento humano, além de integrar funcionalidades avançadas de análise de voz e gestos, permitindo que o usuário treine de forma realista e efetiva em qualquer lugar, sem depender de instrutores presenciais ou serviços na nuvem.
 
 ### 2.2 Proposta de solução
-```
-Descreva resumidamente sua proposta de modelo preditivo e como esse modelo pretende resolver o problema, atendendo os objetivos.
 
-Remova este bloco ao final
-```
+&emsp;A solução consiste em um aplicativo desktop e mobile que roda em dispositivos equipados com Snapdragon, utilizando Edge Computing e inteligência artificial para fornecer treinamento de comunicação totalmente privado. O modelo analisa a voz, gestos e linguagem não verbal do usuário para detectar sinais de nervosismo, ritmo de fala, entonação e postura, oferecendo feedback acerca de comportamentos e métricas visuais de performance por meio de dashboards interativos. Ao combinar processamento de áudio, vídeo e capacidade para execução de LLMs diretamente no dispositivo, o modelo garante privacidade total, elimina o julgamento humano e atende aos objetivos de aprimorar a comunicação, aumentar a confiança e preparar usuários para apresentações críticas, de forma segura e prática. Por rodar localmente, a ferramenta se torna mais acessível economicamente e pode ser utilizada mesmo em locais com pouca ou nenhuma conexão de rede, garantindo que qualquer usuário tenha acesso às funcionalidades essenciais em qualquer lugar.
 
 ### 2.3 Justificativa
-```
-Faça uma breve defesa de sua proposta de solução, escreva sobre seus potenciais, seus benefícios e como ela se diferencia.
 
-Remova este bloco ao final
-```
+&emsp;A proposta se justifica pelo potencial de transformar o treinamento de comunicação em pitches e apresentações, tornando-o mais seguro, acessível e eficaz. Diferente de treinamentos tradicionais, que são caros e muitas vezes expõem o indivíduo a julgamentos e vazamento de dados, esta solução permite que líderes, executivos e empreendedores pratiquem em ambientes privados, recebendo feedback de IA sobre postura, entonação, ritmo e linguagem não verbal. Ao rodar localmente em dispositivos equipados com Snapdragon, a ferramenta garante privacidade total, reduz custos e pode ser utilizada mesmo em locais com pouca ou nenhuma conexão de rede, aumentando seu alcance. Seu diferencial está na integração entre análise de voz, gestos e simulações realistas, criando uma experiência de treinamento completa e realista que combina performance, aprendizado e segurança de forma completa e eficiente. 
 
 ## <a name="c4"></a>4. Desenvolvimento e Resultados
 ### 4.1.1. Contexto da indústria 
