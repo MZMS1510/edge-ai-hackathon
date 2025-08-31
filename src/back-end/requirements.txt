@@ -1,24 +1,32 @@
-mediapipe
-opencv-python
-numpy
-sounddevice
-soundfile
-librosa
-webrtcvad
-fastapi
-uvicorn
-streamlit
-requests
-scipy
-websockets
+# Core FastAPI server dependencies
 fastapi>=0.95.0
 uvicorn[standard]>=0.22.0
-httpx>=0.24.0
 pydantic>=1.10.0
-# Optional (required only for training or better pose ML):
-pandas>=1.5.0; extra == "ml"
-scikit-learn>=1.2.0; extra == "ml"
-joblib>=1.2.0; extra == "ml"
-# Optional CV libs for extraction from video
-opencv-python>=4.7.0; extra == "cv"
-mediapipe>=0.10.0; extra == "cv"
+
+# HTTP client for API calls
+httpx>=0.24.0
+requests>=2.31.0
+
+# Computer Vision and AI
+mediapipe>=0.10.0
+opencv-python>=4.7.0
+numpy>=1.24.0
+
+# Audio processing
+sounddevice>=0.4.6
+soundfile>=0.12.1
+librosa>=0.10.0
+
+# Data processing
+scipy>=1.10.0
+pandas>=1.5.0
+
+# WebSocket support
+websockets>=11.0
+
+# Web interface
+streamlit>=1.28.0
+
+# Optional ML dependencies (for pose model training)
+scikit-learn>=1.2.0
+joblib>=1.2.0
