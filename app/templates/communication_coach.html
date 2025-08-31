@@ -240,9 +240,10 @@
             font-size: 1.1em;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin: 0 10px;
+            margin: 10px;
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
             font-weight: 500;
+            display: inline-block;
         }
         
         .btn:hover {
@@ -523,6 +524,9 @@
             <button class="btn test" id="testMediaPipeBtn" onclick="testMediaPipe()" style="background: #28a745;">
                 🔍 Testar MediaPipe
             </button>
+            <button class="btn training" id="trainingBtn" onclick="goToTraining()" style="background: #ff6b35;">
+                🎯 Coletor de Dados
+            </button>
             
             <!-- Controles de visualização -->
             <div class="visualization-controls">
@@ -762,6 +766,10 @@
                     alert('Erro ao testar MediaPipe. Verifique o console para detalhes.');
                 });
         }
+
+        function goToTraining() {
+            window.location.href = '/training';
+        }
         
         function updateControls() {
             const startBtn = document.getElementById('startBtn');
@@ -769,6 +777,7 @@
             const resetBtn = document.getElementById('resetBtn');
             const testBtn = document.getElementById('testBtn');
             const testMediaPipeBtn = document.getElementById('testMediaPipeBtn');
+            const trainingBtn = document.getElementById('trainingBtn');
             
             if (isAnalyzing) {
                 startBtn.disabled = true;
@@ -776,12 +785,14 @@
                 resetBtn.disabled = true;
                 testBtn.disabled = true;
                 testMediaPipeBtn.disabled = true;
+                trainingBtn.disabled = true;
             } else {
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
                 resetBtn.disabled = false;
                 testBtn.disabled = false;
                 testMediaPipeBtn.disabled = false;
+                trainingBtn.disabled = false;
             }
         }
         

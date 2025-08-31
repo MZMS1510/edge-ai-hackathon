@@ -27,6 +27,9 @@ from core.camera import CameraManager
 from core.report_manager import ReportManager
 from utils.qualcomm_utils import QualcommUtils
 
+# Importar coletor de dados de treinamento
+from training_data_collector import PostureDataCollector
+
 app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = 'communication-coach-edge-ai'
@@ -54,6 +57,9 @@ analyzer = CommunicationAnalyzer()
 camera_manager = CameraManager()
 report_manager = ReportManager()
 qualcomm_utils = QualcommUtils()
+
+# Inicializar coletor de dados de treinamento
+data_collector = PostureDataCollector()
 
 # Métricas de comunicação
 communication_metrics = {
@@ -92,6 +98,11 @@ def pitch_practice_page():
 def final_report():
     """Página do relatório final"""
     return render_template('final_report.html')
+
+@app.route('/training')
+def training_collector():
+    """Página do coletor de dados de treinamento"""
+    return render_template('training_collector.html')
 
 @app.route('/status')
 def status():
@@ -433,6 +444,186 @@ def test_mediapipe():
         
     except Exception as e:
         return jsonify({'error': f'Erro ao testar MediaPipe: {str(e)}'})
+
+# Rotas para coleta de dados de treinamento
+@app.route('/training/collect/<posture_type>')
+def collect_training_data(posture_type):
+    """Coleta dados de treinamento para um tipo específico de postura"""
+    try:
+        if posture_type not in ['good_posture', 'bad_posture', 'neutral_posture']:
+            return jsonify({'error': 'Tipo de postura inválido'})
+        
+        # Iniciar coleta em thread separada
+        def collect_data():
+            try:
+                data_collector.collect_posture_data(posture_type, duration_seconds=10, sample_rate=0.5)
+                socketio.emit('training_complete', {
+                    'posture_type': posture_type,
+                    'status': 'success',
+                    'message': f'Dados de {posture_type} coletados com sucesso!'
+                })
+            except Exception as e:
+                socketio.emit('training_complete', {
+                    'posture_type': posture_type,
+                    'status': 'error',
+                    'message': f'Erro na coleta: {str(e)}'
+                })
+        
+        thread = threading.Thread(target=collect_data)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Iniciando coleta de dados para {posture_type}',
+            'posture_type': posture_type
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/training/statistics')
+def get_training_statistics():
+    """Retorna estatísticas dos dados de treinamento coletados"""
+    try:
+        stats = {}
+        for posture_type in ['good_posture', 'bad_posture', 'neutral_posture']:
+            folder_path = os.path.join(data_collector.data_dir, posture_type)
+            if os.path.exists(folder_path):
+                files = [f for f in os.listdir(folder_path) if f.endswith('.json')]
+                total_samples = 0
+                
+                for file in files:
+                    filepath = os.path.join(folder_path, file)
+                    try:
+                        with open(filepath, 'r') as f:
+                            data = json.load(f)
+                            total_samples += data.get('sample_count', 0)
+                    except:
+                        pass
+                
+                stats[posture_type] = {
+                    'files': len(files),
+                    'total_samples': total_samples
+                }
+            else:
+                stats[posture_type] = {
+                    'files': 0,
+                    'total_samples': 0
+                }
+        
+        return jsonify({
+            'success': True,
+            'statistics': stats
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/training/test-camera')
+def test_training_camera():
+    """Testa a câmera para coleta de dados"""
+    try:
+        success = data_collector.test_camera()
+        return jsonify({
+            'success': success,
+            'message': 'Câmera funcionando corretamente' if success else 'Problemas com a câmera'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/training/retrain-model')
+def retrain_model():
+    """Retreina o modelo com os dados coletados"""
+    try:
+        from posture_analyzer_trainer import PostureAnalyzerTrainer
+        
+        def train_model():
+            try:
+                trainer = PostureAnalyzerTrainer()
+                trainer.train_and_optimize()
+                socketio.emit('training_complete', {
+                    'type': 'model_retrain',
+                    'status': 'success',
+                    'message': 'Modelo retreinado com sucesso!'
+                })
+            except Exception as e:
+                socketio.emit('training_complete', {
+                    'type': 'model_retrain',
+                    'status': 'error',
+                    'message': f'Erro no retreinamento: {str(e)}'
+                })
+        
+        thread = threading.Thread(target=train_model)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Iniciando retreinamento do modelo'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/training/delete-data', methods=['POST'])
+def delete_training_data():
+    """Exclui todos os dados de treinamento coletados"""
+    try:
+        import shutil
+        
+        # Excluir diretórios de dados de treinamento
+        for posture_type in ['good_posture', 'bad_posture', 'neutral_posture']:
+            folder_path = os.path.join(data_collector.data_dir, posture_type)
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+                print(f"🗑️ Diretório {posture_type} excluído")
+        
+        # Recriar diretórios vazios
+        data_collector.ensure_data_directory()
+        
+        socketio.emit('training_complete', {
+            'type': 'data_deletion',
+            'status': 'success',
+            'message': 'Todos os dados de treinamento foram excluídos!'
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': 'Dados de treinamento excluídos com sucesso'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/training/delete-data/<posture_type>', methods=['POST'])
+def delete_specific_training_data(posture_type):
+    """Exclui dados de treinamento de um tipo específico"""
+    try:
+        if posture_type not in ['good_posture', 'bad_posture', 'neutral_posture']:
+            return jsonify({'error': 'Tipo de postura inválido'})
+        
+        import shutil
+        
+        folder_path = os.path.join(data_collector.data_dir, posture_type)
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+            os.makedirs(folder_path)  # Recriar diretório vazio
+            print(f"🗑️ Dados de {posture_type} excluídos")
+        
+        socketio.emit('training_complete', {
+            'type': 'data_deletion',
+            'status': 'success',
+            'message': f'Dados de {posture_type} excluídos!'
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': f'Dados de {posture_type} excluídos com sucesso'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 def coaching_loop(camera_index):
     """Loop principal de análise de comunicação"""

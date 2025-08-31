@@ -91,6 +91,7 @@ pip install -r requirements.txt
 python run.py
 ```
 
+
 4. **Acesse no navegador**:
 ```
 http://localhost:5000

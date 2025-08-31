@@ -645,9 +645,66 @@
       "strengths_count": 0,
       "weaknesses_count": 1,
       "recommendations_count": 4
+    },
+    {
+      "id": "analysis_35",
+      "timestamp": "2025-08-31T16:12:03.021126",
+      "date": "31/08/2025",
+      "time": "16:12",
+      "duration_minutes": 0.2,
+      "overall_score": 51.4,
+      "performance_level": "Precisa Melhorar",
+      "total_frames": 12,
+      "report_file": "analysis_report_20250831_161203.json",
+      "summary": {
+        "posture": 52.0,
+        "gesture": 46.6,
+        "eye_contact": 55.1
+      },
+      "strengths_count": 0,
+      "weaknesses_count": 0,
+      "recommendations_count": 4
+    },
+    {
+      "id": "analysis_36",
+      "timestamp": "2025-08-31T16:21:47.520840",
+      "date": "31/08/2025",
+      "time": "16:21",
+      "duration_minutes": 0.5,
+      "overall_score": 50.2,
+      "performance_level": "Precisa Melhorar",
+      "total_frames": 27,
+      "report_file": "analysis_report_20250831_162147.json",
+      "summary": {
+        "posture": 50.2,
+        "gesture": 45.2,
+        "eye_contact": 54.5
+      },
+      "strengths_count": 0,
+      "weaknesses_count": 0,
+      "recommendations_count": 4
+    },
+    {
+      "id": "analysis_37",
+      "timestamp": "2025-08-31T16:58:44.206474",
+      "date": "31/08/2025",
+      "time": "16:58",
+      "duration_minutes": 0.2,
+      "overall_score": 50.9,
+      "performance_level": "Precisa Melhorar",
+      "total_frames": 11,
+      "report_file": "analysis_report_20250831_165844.json",
+      "summary": {
+        "posture": 50.0,
+        "gesture": 46.3,
+        "eye_contact": 55.7
+      },
+      "strengths_count": 0,
+      "weaknesses_count": 1,
+      "recommendations_count": 4
     }
   ],
-  "total_analyses": 34,
-  "last_updated": "2025-08-31T12:07:43.316101",
+  "total_analyses": 37,
+  "last_updated": "2025-08-31T16:58:44.206474",
   "created_date": "2025-08-31T09:27:31.925664"
 }
