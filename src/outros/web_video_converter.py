@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-Edge Video to Audio Converter - Frontend Web
+Edge Video/Audio Tools - Frontend Web
 
-Aplicação web Flask 100% local (edge computing) para:
-- Upload de vídeos (MP4, AVI, MOV, etc.)
-- Extração de áudio automatizada
-- Download do áudio em formato WAV
+Aplicação web Flask 100% local (edge computing) com duas ferramentas:
+1. Video to Audio Converter: Converte vídeos para áudio WAV
+2. Audio to Text Transcriber: Transcreve áudio para texto
 
 Características:
 - 100% local (nenhum dado sai do dispositivo)
 - Interface web simples e intuitiva
 - Processamento em tempo real
-- Suporte a múltiplos formatos de vídeo
+- Suporte a múltiplos formatos
 
 Uso:
     python web_video_converter.py
@@ -21,32 +20,28 @@ Autor: Edge AI Hackathon Team
 """
 
 import os
-import sys
 import subprocess
-import tempfile
-import shutil
-from pathlib import Path
-from datetime import datetime
-import json
-
-from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for
-from werkzeug.utils import secure_filename
-import uuid
 import whisper
+from flask import Flask, request, jsonify, render_template, send_file, redirect, url_for, flash
+from werkzeug.utils import secure_filename
+from pathlib import Path
+import uuid
 
-# Configuração do Flask
 app = Flask(__name__)
 app.secret_key = 'edge-video-converter-secret-key'
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max
 
-# Configurações - usar caminhos absolutos
+# Configurações
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(SCRIPT_DIR, 'uploads')
 OUTPUT_FOLDER = os.path.join(SCRIPT_DIR, 'outputs')
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'avi', 'mov', 'mkv', 'webm', 'flv'}
 ALLOWED_AUDIO_EXTENSIONS = {'wav', 'mp3', 'm4a', 'flac', 'ogg', 'aac'}
 
-# Criar pastas necessárias
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB máximo
+
+# Criar pastas se não existirem
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
@@ -133,9 +128,9 @@ def status():
         'status': 'ok' if ffmpeg_ok else 'ffmpeg_missing'
     })
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    """Upload e processamento de arquivo"""
+@app.route('/convert-video-to-audio', methods=['POST'])
+def convert_video_to_audio():
+    """Converte vídeo para áudio"""
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'Nenhum arquivo enviado'}), 400
@@ -144,15 +139,12 @@ def upload_file():
         if file.filename == '':
             return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
         
-        # Detectar tipo de arquivo
-        is_video = allowed_file(file.filename, 'video')
-        is_audio = allowed_file(file.filename, 'audio')
+        # Verificar se é vídeo
+        if not allowed_file(file.filename, 'video'):
+            return jsonify({'error': 'Formato de vídeo não suportado. Use: MP4, AVI, MOV, MKV, WebM, FLV'}), 400
         
-        if not (is_video or is_audio):
-            return jsonify({'error': 'Formato de arquivo não suportado'}), 400
-        
-        # Verificar FFmpeg para vídeos
-        if is_video and not check_ffmpeg():
+        # Verificar FFmpeg
+        if not check_ffmpeg():
             return jsonify({'error': 'FFmpeg não encontrado. Instale o FFmpeg primeiro.'}), 500
         
         # Salvar arquivo
@@ -161,61 +153,68 @@ def upload_file():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(file_path)
         
-        # Processar baseado no tipo
-        if is_video:
-            # Extrair áudio do vídeo
-            audio_filename = f"{Path(unique_filename).stem}_audio.wav"
-            audio_path = os.path.join(app.config['OUTPUT_FOLDER'], audio_filename)
-            
-            if not extract_audio_from_video(file_path, audio_path):
-                os.remove(file_path)
-                return jsonify({'error': 'Falha na extração de áudio'}), 500
-            
-            # Transcrever o áudio extraído
-            transcription, error = transcribe_audio_file(audio_path)
-            if error:
-                os.remove(file_path)
-                return jsonify({'error': f'Falha na transcrição: {error}'}), 500
-            
-            # Salvar transcrição
-            txt_filename = f"{Path(unique_filename).stem}_transcricao.txt"
-            txt_path = os.path.join(app.config['OUTPUT_FOLDER'], txt_filename)
-            with open(txt_path, 'w', encoding='utf-8') as f:
-                f.write(transcription)
-            
-            # Limpar arquivo original
-            os.remove(file_path)
-            
-            return jsonify({
-                'success': True,
-                'message': 'Vídeo processado com sucesso!',
-                'audio_file': audio_filename,
-                'transcription_file': txt_filename,
-                'transcription': transcription[:200] + "..." if len(transcription) > 200 else transcription
-            })
+        # Extrair áudio do vídeo
+        audio_filename = f"{Path(unique_filename).stem}_audio.wav"
+        audio_path = os.path.join(app.config['OUTPUT_FOLDER'], audio_filename)
         
-        else:  # is_audio
-            # Transcrever áudio diretamente
-            transcription, error = transcribe_audio_file(file_path)
-            if error:
-                os.remove(file_path)
-                return jsonify({'error': f'Falha na transcrição: {error}'}), 500
-            
-            # Salvar transcrição
-            txt_filename = f"{Path(unique_filename).stem}_transcricao.txt"
-            txt_path = os.path.join(app.config['OUTPUT_FOLDER'], txt_filename)
-            with open(txt_path, 'w', encoding='utf-8') as f:
-                f.write(transcription)
-            
-            # Limpar arquivo original
+        if not extract_audio_from_video(file_path, audio_path):
             os.remove(file_path)
+            return jsonify({'error': 'Falha na extração de áudio'}), 500
+        
+        # Limpar arquivo original
+        os.remove(file_path)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Vídeo convertido para áudio com sucesso!',
+            'audio_file': audio_filename
+        })
             
-            return jsonify({
-                'success': True,
-                'message': 'Áudio transcrito com sucesso!',
-                'transcription_file': txt_filename,
-                'transcription': transcription[:200] + "..." if len(transcription) > 200 else transcription
-            })
+    except Exception as e:
+        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+
+@app.route('/transcribe-audio', methods=['POST'])
+def transcribe_audio():
+    """Transcreve áudio para texto"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'Nenhum arquivo enviado'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
+        
+        # Verificar se é áudio
+        if not allowed_file(file.filename, 'audio'):
+            return jsonify({'error': 'Formato de áudio não suportado. Use: WAV, MP3, M4A, FLAC, OGG, AAC'}), 400
+        
+        # Salvar arquivo
+        filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4()}_{filename}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        file.save(file_path)
+        
+        # Transcrever áudio
+        transcription, error = transcribe_audio_file(file_path)
+        if error:
+            os.remove(file_path)
+            return jsonify({'error': f'Falha na transcrição: {error}'}), 500
+        
+        # Salvar transcrição
+        txt_filename = f"{Path(unique_filename).stem}_transcricao.txt"
+        txt_path = os.path.join(app.config['OUTPUT_FOLDER'], txt_filename)
+        with open(txt_path, 'w', encoding='utf-8') as f:
+            f.write(transcription)
+        
+        # Limpar arquivo original
+        os.remove(file_path)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Áudio transcrito com sucesso!',
+            'transcription_file': txt_filename,
+            'transcription': transcription[:200] + "..." if len(transcription) > 200 else transcription
+        })
             
     except Exception as e:
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
@@ -233,8 +232,8 @@ def download_file(filename):
         return jsonify({'error': f'Erro no download: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    print("🚀 Iniciando Edge Video/Audio Converter...")
-    print("📹 Suporte: MP4, AVI, MOV, MKV, WebM, FLV")
-    print("🎵 Suporte: WAV, MP3, M4A, FLAC, OGG, AAC")
+    print("🚀 Iniciando Edge Video/Audio Tools...")
+    print("📹 Video to Audio: MP4, AVI, MOV, MKV, WebM, FLV")
+    print("🎵 Audio to Text: WAV, MP3, M4A, FLAC, OGG, AAC")
     print("🌐 Acesse: http://localhost:5000")
     app.run(host='0.0.0.0', port=5000, debug=True)

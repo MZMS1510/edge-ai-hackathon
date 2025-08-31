@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edge Video/Audio Converter</title>
+    <title>Edge Video/Audio Tools</title>
     <style>
         * {
             margin: 0;
@@ -15,42 +15,74 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
         
         .container {
+            max-width: 1200px;
+            margin: 0 auto;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             padding: 40px;
-            max-width: 600px;
-            width: 100%;
             text-align: center;
         }
         
         h1 {
             color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
             font-size: 2.5em;
             font-weight: 300;
         }
         
         .subtitle {
             color: #666;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             font-size: 1.1em;
+        }
+        
+        .tools-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        
+        .tool-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e0e6ff;
+            transition: all 0.3s ease;
+        }
+        
+        .tool-section:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+        }
+        
+        .tool-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .tool-description {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1em;
+            line-height: 1.5;
         }
         
         .upload-area {
             border: 3px dashed #667eea;
             border-radius: 15px;
-            padding: 50px 20px;
-            margin: 30px 0;
+            padding: 40px 20px;
+            margin: 20px 0;
             transition: all 0.3s ease;
-            background: #f8f9ff;
+            background: white;
             cursor: pointer;
             position: relative;
         }
@@ -62,23 +94,23 @@
         }
         
         .upload-icon {
-            font-size: 4em;
-            margin-bottom: 20px;
+            font-size: 3em;
+            margin-bottom: 15px;
             color: #667eea;
         }
         
         .upload-text {
-            font-size: 1.2em;
+            font-size: 1.1em;
             color: #333;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .upload-hint {
             color: #666;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
         
-        #fileInput {
+        .fileInput {
             display: none;
         }
         
@@ -86,9 +118,9 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 15px 40px;
+            padding: 12px 30px;
             border-radius: 50px;
-            font-size: 1.1em;
+            font-size: 1em;
             cursor: pointer;
             transition: all 0.3s ease;
             margin: 10px;
@@ -108,10 +140,10 @@
         
         .progress-bar {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background: #e0e0e0;
-            border-radius: 4px;
-            margin: 20px 0;
+            border-radius: 3px;
+            margin: 15px 0;
             overflow: hidden;
             display: none;
         }
@@ -119,16 +151,17 @@
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 4px;
+            border-radius: 3px;
             width: 0%;
             transition: width 0.3s ease;
         }
         
         .result {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 10px;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
             display: none;
+            font-size: 0.9em;
         }
         
         .result.success {
@@ -144,146 +177,195 @@
         }
         
         .file-info {
-            margin: 20px 0;
-            padding: 15px;
+            margin: 15px 0;
+            padding: 12px;
             background: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 6px;
             display: none;
+            font-size: 0.85em;
         }
         
         .transcription-preview {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 12px;
             background: #f8f9ff;
-            border-left: 4px solid #667eea;
-            border-radius: 0 8px 8px 0;
+            border-left: 3px solid #667eea;
+            border-radius: 0 6px 6px 0;
             text-align: left;
             font-style: italic;
             color: #333;
+            font-size: 0.85em;
         }
         
         .download-links {
-            margin-top: 20px;
+            margin-top: 15px;
         }
         
         .download-links a {
             display: inline-block;
-            margin: 5px;
-            padding: 10px 20px;
+            margin: 3px;
+            padding: 8px 16px;
             background: #28a745;
             color: white;
             text-decoration: none;
-            border-radius: 25px;
+            border-radius: 20px;
             transition: all 0.3s ease;
+            font-size: 0.85em;
         }
         
         .download-links a:hover {
             background: #218838;
             transform: translateY(-1px);
         }
+        
+        @media (max-width: 768px) {
+            .tools-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎬 Edge Video/Audio Converter</h1>
-        <p class="subtitle">Converta vídeos para áudio e transcreva para texto<br>100% local - seus dados não saem do dispositivo</p>
+        <h1>🎬 Edge Video/Audio Tools</h1>
+        <p class="subtitle">Ferramentas 100% locais para conversão e transcrição<br>Seus dados não saem do dispositivo</p>
         
-        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text">Clique ou arraste arquivos aqui</div>
-            <div class="upload-hint">Vídeos: MP4, AVI, MOV, MKV, WebM, FLV<br>Áudios: WAV, MP3, M4A, FLAC, OGG, AAC</div>
+        <div class="tools-container">
+            <!-- Ferramenta 1: Video to Audio -->
+            <div class="tool-section">
+                <h2 class="tool-title">🎥 Video to Audio</h2>
+                <p class="tool-description">Converta vídeos para áudio WAV de alta qualidade</p>
+                
+                <div class="upload-area" onclick="document.getElementById('videoFileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Clique ou arraste vídeos aqui</div>
+                    <div class="upload-hint">MP4, AVI, MOV, MKV, WebM, FLV</div>
+                </div>
+                
+                <input type="file" id="videoFileInput" class="fileInput" accept=".mp4,.avi,.mov,.mkv,.webm,.flv">
+                
+                <div class="file-info" id="videoFileInfo">
+                    <strong>Arquivo:</strong> <span id="videoFileName"></span><br>
+                    <strong>Tamanho:</strong> <span id="videoFileSize"></span>
+                </div>
+                
+                <button class="btn" onclick="convertVideoToAudio()" id="videoBtn" disabled>
+                    🎵 Converter para Áudio
+                </button>
+                
+                <div class="progress-bar" id="videoProgressBar">
+                    <div class="progress-fill" id="videoProgressFill"></div>
+                </div>
+                
+                <div class="result" id="videoResult"></div>
+            </div>
+            
+            <!-- Ferramenta 2: Audio to Text -->
+            <div class="tool-section">
+                <h2 class="tool-title">🎤 Audio to Text</h2>
+                <p class="tool-description">Transcreva áudios para texto usando IA local</p>
+                
+                <div class="upload-area" onclick="document.getElementById('audioFileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Clique ou arraste áudios aqui</div>
+                    <div class="upload-hint">WAV, MP3, M4A, FLAC, OGG, AAC</div>
+                </div>
+                
+                <input type="file" id="audioFileInput" class="fileInput" accept=".wav,.mp3,.m4a,.flac,.ogg,.aac">
+                
+                <div class="file-info" id="audioFileInfo">
+                    <strong>Arquivo:</strong> <span id="audioFileName"></span><br>
+                    <strong>Tamanho:</strong> <span id="audioFileSize"></span>
+                </div>
+                
+                <button class="btn" onclick="transcribeAudio()" id="audioBtn" disabled>
+                    📝 Transcrever para Texto
+                </button>
+                
+                <div class="progress-bar" id="audioProgressBar">
+                    <div class="progress-fill" id="audioProgressFill"></div>
+                </div>
+                
+                <div class="result" id="audioResult"></div>
+            </div>
         </div>
-        
-        <input type="file" id="fileInput" accept=".mp4,.avi,.mov,.mkv,.webm,.flv,.wav,.mp3,.m4a,.flac,.ogg,.aac">
-        
-        <div class="file-info" id="fileInfo">
-            <strong>Arquivo selecionado:</strong> <span id="fileName"></span><br>
-            <strong>Tamanho:</strong> <span id="fileSize"></span><br>
-            <strong>Tipo:</strong> <span id="fileType"></span>
-        </div>
-        
-        <button class="btn" onclick="uploadFile()" id="uploadBtn" disabled>
-            📤 Processar Arquivo
-        </button>
-        
-        <div class="progress-bar" id="progressBar">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
-        
-        <div class="result" id="result"></div>
     </div>
 
     <script>
-        let selectedFile = null;
+        // Variáveis para cada ferramenta
+        let selectedVideoFile = null;
+        let selectedAudioFile = null;
         
-        // Drag and drop
-        const uploadArea = document.querySelector('.upload-area');
-        const fileInput = document.getElementById('fileInput');
-        
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
+        // Configuração de drag and drop para ambas as ferramentas
+        function setupDragAndDrop(uploadArea, fileInput, fileType) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => highlight(uploadArea), false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => unhighlight(uploadArea), false);
+            });
+            
+            uploadArea.addEventListener('drop', (e) => handleDrop(e, fileInput, fileType), false);
+            fileInput.addEventListener('change', (e) => handleFileChange(e, fileType));
+        }
         
         function preventDefaults(e) {
             e.preventDefault();
             e.stopPropagation();
         }
         
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, highlight, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, unhighlight, false);
-        });
-        
-        function highlight() {
-            uploadArea.classList.add('dragover');
+        function highlight(element) {
+            element.classList.add('dragover');
         }
         
-        function unhighlight() {
-            uploadArea.classList.remove('dragover');
+        function unhighlight(element) {
+            element.classList.remove('dragover');
         }
         
-        uploadArea.addEventListener('drop', handleDrop, false);
-        
-        function handleDrop(e) {
+        function handleDrop(e, fileInput, fileType) {
             const dt = e.dataTransfer;
             const files = dt.files;
             if (files.length > 0) {
-                handleFile(files[0]);
+                handleFile(files[0], fileType);
             }
         }
         
-        fileInput.addEventListener('change', function(e) {
+        function handleFileChange(e, fileType) {
             if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
+                handleFile(e.target.files[0], fileType);
             }
-        });
+        }
         
-        function handleFile(file) {
-            selectedFile = file;
-            
-            // Mostrar informações do arquivo
-            document.getElementById('fileName').textContent = file.name;
-            document.getElementById('fileSize').textContent = formatFileSize(file.size);
-            
-            // Detectar tipo
-            const isVideo = /\.(mp4|avi|mov|mkv|webm|flv)$/i.test(file.name);
-            const isAudio = /\.(wav|mp3|m4a|flac|ogg|aac)$/i.test(file.name);
-            
-            if (isVideo) {
-                document.getElementById('fileType').textContent = 'Vídeo (será extraído áudio + transcrição)';
-            } else if (isAudio) {
-                document.getElementById('fileType').textContent = 'Áudio (será transcrito)';
+        function handleFile(file, fileType) {
+            if (fileType === 'video') {
+                selectedVideoFile = file;
+                showFileInfo(file, 'video');
             } else {
-                document.getElementById('fileType').textContent = 'Formato não suportado';
-                document.getElementById('uploadBtn').disabled = true;
-                return;
+                selectedAudioFile = file;
+                showFileInfo(file, 'audio');
             }
-            
-            document.getElementById('fileInfo').style.display = 'block';
-            document.getElementById('uploadBtn').disabled = false;
+        }
+        
+        function showFileInfo(file, fileType) {
+            const prefix = fileType === 'video' ? 'video' : 'audio';
+            document.getElementById(`${prefix}FileName`).textContent = file.name;
+            document.getElementById(`${prefix}FileSize`).textContent = formatFileSize(file.size);
+            document.getElementById(`${prefix}FileInfo`).style.display = 'block';
+            document.getElementById(`${prefix}Btn`).disabled = false;
         }
         
         function formatFileSize(bytes) {
@@ -294,27 +376,27 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
         
-        async function uploadFile() {
-            if (!selectedFile) return;
+        async function convertVideoToAudio() {
+            if (!selectedVideoFile) return;
             
             const formData = new FormData();
-            formData.append('file', selectedFile);
+            formData.append('file', selectedVideoFile);
             
             // Mostrar progresso
-            document.getElementById('progressBar').style.display = 'block';
-            document.getElementById('uploadBtn').disabled = true;
-            document.getElementById('uploadBtn').textContent = '⏳ Processando...';
+            document.getElementById('videoProgressBar').style.display = 'block';
+            document.getElementById('videoBtn').disabled = true;
+            document.getElementById('videoBtn').textContent = '⏳ Convertendo...';
             
             // Simular progresso
             let progress = 0;
             const progressInterval = setInterval(() => {
                 progress += Math.random() * 15;
                 if (progress > 90) progress = 90;
-                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('videoProgressFill').style.width = progress + '%';
             }, 200);
             
             try {
-                const response = await fetch('/upload', {
+                const response = await fetch('/convert-video-to-audio', {
                     method: 'POST',
                     body: formData
                 });
@@ -323,26 +405,73 @@
                 
                 // Completar progresso
                 clearInterval(progressInterval);
-                document.getElementById('progressFill').style.width = '100%';
+                document.getElementById('videoProgressFill').style.width = '100%';
                 
                 setTimeout(() => {
-                    document.getElementById('progressBar').style.display = 'none';
-                    showResult(result, response.ok);
+                    document.getElementById('videoProgressBar').style.display = 'none';
+                    showResult(result, response.ok, 'video');
                 }, 500);
                 
             } catch (error) {
                 clearInterval(progressInterval);
-                document.getElementById('progressBar').style.display = 'none';
-                showResult({error: 'Erro de conexão: ' + error.message}, false);
+                document.getElementById('videoProgressBar').style.display = 'none';
+                showResult({error: 'Erro de conexão: ' + error.message}, false, 'video');
             }
             
             // Resetar botão
-            document.getElementById('uploadBtn').disabled = false;
-            document.getElementById('uploadBtn').textContent = '📤 Processar Arquivo';
+            document.getElementById('videoBtn').disabled = false;
+            document.getElementById('videoBtn').textContent = '🎵 Converter para Áudio';
         }
         
-        function showResult(data, success) {
-            const resultDiv = document.getElementById('result');
+        async function transcribeAudio() {
+            if (!selectedAudioFile) return;
+            
+            const formData = new FormData();
+            formData.append('file', selectedAudioFile);
+            
+            // Mostrar progresso
+            document.getElementById('audioProgressBar').style.display = 'block';
+            document.getElementById('audioBtn').disabled = true;
+            document.getElementById('audioBtn').textContent = '⏳ Transcrevendo...';
+            
+            // Simular progresso
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 90) progress = 90;
+                document.getElementById('audioProgressFill').style.width = progress + '%';
+            }, 300);
+            
+            try {
+                const response = await fetch('/transcribe-audio', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                // Completar progresso
+                clearInterval(progressInterval);
+                document.getElementById('audioProgressFill').style.width = '100%';
+                
+                setTimeout(() => {
+                    document.getElementById('audioProgressBar').style.display = 'none';
+                    showResult(result, response.ok, 'audio');
+                }, 500);
+                
+            } catch (error) {
+                clearInterval(progressInterval);
+                document.getElementById('audioProgressBar').style.display = 'none';
+                showResult({error: 'Erro de conexão: ' + error.message}, false, 'audio');
+            }
+            
+            // Resetar botão
+            document.getElementById('audioBtn').disabled = false;
+            document.getElementById('audioBtn').textContent = '📝 Transcrever para Texto';
+        }
+        
+        function showResult(data, success, toolType) {
+            const resultDiv = document.getElementById(`${toolType}Result`);
             resultDiv.style.display = 'block';
             resultDiv.className = `result ${success ? 'success' : 'error'}`;
             
@@ -370,6 +499,17 @@
                 resultDiv.innerHTML = `<h3>❌ Erro</h3><p>${data.error}</p>`;
             }
         }
+        
+        // Inicializar drag and drop para ambas as ferramentas
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoUploadArea = document.querySelector('.tool-section:first-child .upload-area');
+            const audioUploadArea = document.querySelector('.tool-section:last-child .upload-area');
+            const videoFileInput = document.getElementById('videoFileInput');
+            const audioFileInput = document.getElementById('audioFileInput');
+            
+            setupDragAndDrop(videoUploadArea, videoFileInput, 'video');
+            setupDragAndDrop(audioUploadArea, audioFileInput, 'audio');
+        });
     </script>
 </body>
 </html>
