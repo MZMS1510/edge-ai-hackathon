@@ -4,9 +4,9 @@
 <a href= "https://www.qualcomm.com/developer/events/edge-ai-developer-hackathon/brazil"><img src="./assets/Qualcomm.jpeg" alt="Qualcomm - Foto" border="0" width="100%"></a>
 </p>
 
-# [Nome do projeto]
+# Nome do Projeto: Pitch Pract
 
-## Coditores
+## Nome do Grupo: Coditores
 
 
 ## 👨‍🎓 Membros do time: 
@@ -27,40 +27,50 @@
 
 ## 📝 Descrição
 
-&nbsp;&nbsp;&nbsp;&nbsp;Adicionar aqui a descrição de projeto
+&emsp;A nossa ferramenta analisa a comunicação oral e a linguagem não verbal para fornecer feedback sobre postura, entonação, ritmo de fala e sinais de nervosismo, apresentando métricas visuais de performance de forma intuitiva. Diferente de métodos tradicionais, o modelo roda diretamente no dispositivo, garantindo privacidade total, reduzindo custos e permitindo uso mesmo sem conexão com a internet. Combinando análise multimodal e simulações realistas, a solução prepara líderes, executivos e empreendedores para apresentações críticas de forma prática, acessível e eficaz.
 
 ## 📝 Vídeo demonstrativo
 
 Clique [aqui]("Adicionar link aqui") para acessar o vídeo demonstrativo da ferramenta.
 
-## 📁 Folder Structure
+## 📁 Estrutura de Pastas
 
-Among the files and folders present in the root of the project, the following are defined:
+Entre os arquivos e pastas presentes na raiz do projeto, estão definidos os seguintes:
 
 ```plaintext
-project/
+edge-ai-hackathon/
 │
-├── assets/                           # Elementos não estruturais relacionados à documentação
-│   ├── fotos/                        # Fotos dos desenvolvedores do proejeto
-│   └── N/                            # Adicionar
+├── assets/                           # Elementos visuais e imagens
+│   ├── Qualcomm.jpeg                 # Logo do evento
+│   ├── fotos/                        # Fotos dos desenvolvedores do projeto
+│   │   ├── ana-cristina.jpg
+│   │   ├── carlos-icaro.jpg
+│   │   ├── felipe-martins.jpg
+│   │   ├── gustavo-martins.jpg
+│   │   ├── lavinia-mendonca.jpg
+│   │   └── marcos-marcondes.jpg
+│   └── personas/                     # Imagens das personas e user stories
+│       ├── 3w3c.png
+│       ├── invest.png
+│       ├── persona1.png
+│       ├── persona2.png
+│       └── persona3.png
 │
-├── documents/                        # Adicionar o que for necessário
-│   ├── N/                            # Adicionar
-│   └── N/                            # Adicionar
+├── documents/                        # Documentação complementar
+│   └── documentacao.md               # Documento principal do projeto
 │
-├── src/                              # Adicionar
-│   ├── FrontEnd/                     # Adicionar
-│   │   ├── N/                        # Adicionar
-│   │   ├── NN/                       # Adicioanr
-│   │   └── NNN/                      # Adicionar
-│   │
-│   │
-│   └── BackEnd/                      # Adicionar
-│       ├── N/                        # Adicionar
-│       ├── NN/                       # Adicioanr
-│       └── NNN/                      # Adicionar
+├── src/                              # Código-fonte do projeto
+│   └── back-end/                     # Backend do projeto
+│       └── __pycache__/              # Arquivos de cache do Python
+│           ├── core_processing.cpython-310.pyc
+│           ├── main.cpython-310.pyc
+│           ├── main.cpython-313.pyc
+│           ├── ollama_client.cpython-310.pyc
+│           ├── pose_model.cpython-310.pyc
+│           ├── pose_model.cpython-313.pyc
 │
-└── README.md                         # Documentação do projeto
+├── LICENSE                           # Licença do projeto
+├── README.md                         # Documentação do projeto
 ```
 
 ## 💻 Configuração e Execução da ferramenta
