@@ -38,7 +38,7 @@ Este é um sistema de análise de comunicação em tempo real que utiliza IA par
 
 ## 📝 Vídeo demonstrativo
 
-Clique [https://www.youtube.com/shorts/CNqhdcmNrjc](Vídeo) para acessar o vídeo demonstrativo da ferramenta.
+Clique [aqui](https://www.youtube.com/shorts/CNqhdcmNrjc) para acessar o vídeo demonstrativo da ferramenta.
 
 ## 📁 Estrutura de Pastas
 
