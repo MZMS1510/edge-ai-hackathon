@@ -65,7 +65,7 @@ Descreva aqui o Contexto Setorial
 ```
 
 #### 4.1.3. Planejamento Geral da Solução
-```
+
 a) quais os dados disponíveis (fonte e conteúdo - exemplo: dados da área de Compras da empresa descrevendo seus fornecedores).
 b) qual a solução proposta (pode ser um resumo do texto da Seção 2.2).
 c) como a solução proposta deverá ser utilizada.
@@ -73,9 +73,9 @@ d) quais os benefícios trazidos pela solução proposta.
 e) qual será o critério de sucesso.
 
 Remova este bloco ao final
-```
 
-```
+
+
 #### 4.1.5. Público Alvo
 
 A definição de público-alvo é um elemento essencial no desenvolvimento de uma solução tecnológica. Ela orienta não apenas o design da experiência do usuário, mas também a narrativa de valor do produto, os canais de distribuição e a própria viabilidade de mercado. Conhecer com clareza quem são os potenciais usuários, quais dores compartilham e de que forma sua solução se conecta a essas necessidades é o que diferencia uma ideia promissora de um produto com real aderência. No caso de uma ferramenta voltada para análise e aprimoramento da comunicação em pitches de vendas e captação, compreender os perfis que mais se beneficiam dessa proposta é fundamental para guiar tanto o desenvolvimento técnico quanto a estratégia de posicionamento.
@@ -87,14 +87,23 @@ Os líderes de área se deparam com o desafio de defender projetos estratégicos
 Apesar das diferenças de contexto, esses três perfis convergem em três necessidades centrais: aprimorar a performance de comunicação em pitches, garantir a confidencialidade de informações estratégicas e acessar uma experiência de treinamento realista e integrada. A solução proposta se posiciona justamente na interseção dessas demandas, oferecendo privacidade, análise aprofundada da performance comunicativa e treinamento interativo orientado a cenários do mundo real.
 
 #### 4.1.6. Personas
-```
-Posicione aqui suas Personas (indique se são personas que utilizam o modelo e/ou se são afetadas pelo modelo).
 
-Remova este bloco ao final
-```
+A construção de personas é uma etapa essencial para transformar o público-alvo em perfis concretos e representativos, permitindo compreender de forma mais detalhada as necessidades, dores e objetivos dos usuários. No contexto deste projeto, as personas ajudam a orientar o desenvolvimento da ferramenta, garantindo que as funcionalidades ofereçam valor real e resolvam questões específicas de comunicação em pitches.
+
+Cada persona a seguir representa um segmento distinto do público-alvo — líderes de área, executivos e gestores, e empreendedores — e permite visualizar como diferentes perfis interagem com a solução, quais são suas expectativas e como a ferramenta pode atuar como um verdadeiro aliviador de dores, ajudando-os a aprimorar a performance comunicativa, treinar em ambientes realistas e manter a privacidade de informações estratégicas.
+
+<div style="text-align: center;">
+  <img src="../assets/personas/persona1.png" alt="Persona 1"/>
+
+  <img src="../assets/personas/persona2.png" alt="Persona 1"/>
+
+  <img src="../assets/personas/persona3.png" alt="Persona 1"/>
+
+</div>
 
 
-```
+
+
 
 ### 4.5. Avaliação
 ```
