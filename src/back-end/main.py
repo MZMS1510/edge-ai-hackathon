@@ -1,256 +1,268 @@
-#!/usr/bin/env python3
-from typing import List
-import re
-import json
-import os
-
-# Try to import runtime dependencies; fall back to lightweight stubs so tests can run without installing
-try:
-    from fastapi import FastAPI, HTTPException
-    from pydantic import BaseModel
-    import httpx
-    import uvicorn
-    HAS_DEPENDENCIES = True
-except Exception:
-    HAS_DEPENDENCIES = False
-    # minimal stub for typing in tests: allow subclassing
-    class BaseModel:  # minimal stub for typing in tests
-        def __init__(self, **data):
-            for k, v in data.items():
-                setattr(self, k, v)
-
-    class HTTPException(Exception):
-        def __init__(self, status_code=None, detail=None):
-            self.status_code = status_code
-            self.detail = detail
-            super().__init__(f"HTTPException {status_code}: {detail}")
-
-    # Dummy app that supports decorator usage so module import doesn't fail when FastAPI is absent
-    class DummyApp:
-        def post(self, path, **kwargs):
-            def decorator(func):
-                return func
-
-            return decorator
-
-    def FastAPI(*args, **kwargs):
-        return DummyApp()
-
-    httpx = None
-    uvicorn = None
-
-app = FastAPI(title="Edge AI - Vícios de Linguagem Analyzer")
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Dict, List, Optional, Any
+import time
+from collections import deque
+import threading
+from .ollama_client import get_coaching_feedback, quick_text_analysis
 
 
-class AnalyzeRequest(BaseModel):
-    text: str
-    model: str = "llama2"  # default model name; change to your local model
-    notes: List[str] = []  # optional points from other models (video analysis, ASR notes)
-    transcript: str = ""  # optional full transcript from audio
+# Modelos de dados
+class MetricsData(BaseModel):
+    timestamp: float
+    nervousness_score: float
+    blink_detected: bool
+    blink_stats: Dict
+    hand_movement: float
+    head_movement: float
+    hands_detected: int
+    face_detected: int
+    raw_metrics: Dict
 
-
-class PhraseCount(BaseModel):
-    phrase: str
-    count: int
-    examples: List[str]
-
-
-class AnalyzeResponse(BaseModel):
-    summary: str
-    repetitions: List[PhraseCount]
-    suggestions: List[str]
-    feedback: str = ""  # combined textual feedback about the presentation
-
-
-# Common Portuguese filler words / phrases to detect in local fallback analysis
-COMMON_FILLERS = [
-    "tipo",
-    "né",
-    "basicamente",
-    "então",
-    "aí",
-    "assim",
-    "tá",
-    "ok",
-    "hum",
-    "quer dizer",
-    "na verdade",
-    "bom",
-]
-
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/generate")
-
-
-def local_filler_analysis(text: str) -> dict:
-    lc = text.lower()
-    reps = []
-    # split into sentences for examples
-    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if s.strip()]
-    for phrase in COMMON_FILLERS:
-        pattern = r"\b" + re.escape(phrase) + r"\b"
-        matches = re.findall(pattern, lc)
-        if matches:
-            examples = [s for s in sentences if phrase in s.lower()][:3]
-            reps.append({"phrase": phrase, "count": len(matches), "examples": examples})
-    suggestions = []
-    if reps:
-        suggestions.append(
-            "Evite repetições e muletas de linguagem: faça pausas, use sinônimos ou reformule as frases."
-        )
-    else:
-        suggestions.append("Nenhum vício de linguagem óbvio detectado pelo analisador local.")
-    summary = (
-        f"Detectados {sum(r['count'] for r in reps)} ocorrências de vícios de linguagem em {len(reps)} tipos diferentes."
-        if reps
-        else "Nenhuma ocorrência detectada."
-    )
-    return {"summary": summary, "repetitions": reps, "suggestions": suggestions}
-
-
-def call_ollama(text: str, model: str) -> dict:
-    # Construct a prompt asking for strict JSON output in Portuguese
-    prompt = (
-        "Você é um avaliador de apresentações. Analise o texto abaixo e também combine quaisquer pontos adicionais "
-        "fornecidos (notas de análise de vídeo, marcações de transcrição) em um único texto corrido de feedback. "
-        "Identifique vícios de linguagem (palavras/expressões repetidas, muletas verbais) e devolva um JSON estrito "
-        "com as chaves: summary (string), feedback (string: texto corrido com sugestões e pontos), "
-        "repetitions (lista de objetos com phrase, count, examples), suggestions (lista de strings).\n"
-        "Formato exigido: JSON válido, sem texto adicional.\n"
-        "----TEXT----\n"
-        f"{text}\n"
-        "----END----\n"
-    )
-
-    payload = {"model": model, "prompt": prompt, "max_tokens": 512}
-    # Security / offline guarantee: only allow local Ollama endpoints
-    try:
-        from urllib.parse import urlparse
-
-        parsed = urlparse(OLLAMA_URL)
-        host = parsed.hostname
-        if host not in ("localhost", "127.0.0.1", None):
-            raise RuntimeError(
-                "Chamadas remotas não são permitidas: OLLAMA_URL deve apontar para localhost para manter operação 100% local"
-            )
-    except Exception:
-        # If parsing fails or host is invalid, block remote calls
-        raise RuntimeError("OLLAMA_URL inválido ou não-local; operações remotas proibidas")
-    if not HAS_DEPENDENCIES or httpx is None:
-        raise RuntimeError("httpx/fastapi dependencies não instaladas; chamada ao Ollama indisponível")
-
-    try:
-        with httpx.Client(timeout=30.0) as client:
-            r = client.post(OLLAMA_URL, json=payload)
-            r.raise_for_status()
-            text_resp = r.text.strip()
-            # Try to parse direct JSON
-            try:
-                return json.loads(text_resp)
-            except json.JSONDecodeError:
-                # try to extract first JSON object inside response
-                start = text_resp.find("{")
-                end = text_resp.rfind("}")
-                if start != -1 and end != -1 and end > start:
-                    try:
-                        return json.loads(text_resp[start : end + 1])
-                    except Exception:
-                        pass
-            # fallback: return the raw text as summary
-            return {"summary": text_resp, "feedback": text_resp, "repetitions": [], "suggestions": []}
-    except Exception as e:
-        # propagate as runtime error so caller can fallback to local analysis
-        raise RuntimeError(f"Erro ao chamar Ollama local: {e}")
-
-
-# ---------------- Feedback service ----------------
-class FeedbackInput(BaseModel):
+class TranscriptData(BaseModel):
     transcript: str
-    poses: List[dict] = []  # e.g., list of {timestamp: float, pose: 'open_hands'}
-    vices: List[dict] = []  # output from vices analyzer (phrase/count/examples)
-    extra: dict = {}
+    timestamp: Optional[float] = None
+    duration: Optional[float] = None
+    segments: Optional[List[Dict]] = None
+    is_final: Optional[bool] = False
+    language: Optional[str] = "pt"
 
+# Storage em memória
+class DataStore:
+    def __init__(self, max_size=1000):
+        self.metrics_history = deque(maxlen=max_size)
+        self.transcripts = []
+        self.current_session = {
+            'start_time': time.time(),
+            'last_update': time.time(),
+            'total_frames': 0,
+            'analysis_cache': {}
+        }
+        self.lock = threading.RLock()
+    
+    def add_metrics(self, metrics: MetricsData):
+        with self.lock:
+            self.metrics_history.append(metrics.dict())
+            self.current_session['last_update'] = time.time()
+            self.current_session['total_frames'] += 1
+    
+    def add_transcript(self, transcript: TranscriptData):
+        with self.lock:
+            transcript_dict = transcript.dict()
+            transcript_dict['received_at'] = time.time()
+            self.transcripts.append(transcript_dict)
+            
+            # Trigger análise se for final
+            if transcript.is_final:
+                self.trigger_final_analysis(transcript.transcript)
+    
+    def get_latest_metrics(self, count=50):
+        with self.lock:
+            return list(self.metrics_history)[-count:]
+    
+    def get_current_stats(self):
+        with self.lock:
+            if not self.metrics_history:
+                return {}
+            
+            recent_metrics = list(self.metrics_history)[-30:]  # últimos 30 frames
+            
+            nervousness_scores = [m['nervousness_score'] for m in recent_metrics]
+            blink_rates = [m['blink_stats']['blink_rate'] for m in recent_metrics]
+            hand_movements = [m['raw_metrics']['avg_hand_movement'] for m in recent_metrics]
+            
+            return {
+                'current_nervousness': nervousness_scores[-1] if nervousness_scores else 0,
+                'avg_nervousness': sum(nervousness_scores) / len(nervousness_scores) if nervousness_scores else 0,
+                'avg_blink_rate': sum(blink_rates) / len(blink_rates) if blink_rates else 0,
+                'avg_hand_movement': sum(hand_movements) / len(hand_movements) if hand_movements else 0,
+                'total_frames': self.current_session['total_frames'],
+                'session_duration': time.time() - self.current_session['start_time'],
+                'last_update': self.current_session['last_update']
+            }
+    
+    def get_full_transcript(self):
+        with self.lock:
+            return " ".join([t['transcript'] for t in self.transcripts if t.get('transcript')])
+    
+    def trigger_final_analysis(self, transcript):
+        """Trigger análise com DeepSeek em thread separada"""
+        def analyze():
+            try:
+                recent_metrics = self.get_latest_metrics(100)
+                latest_metrics = recent_metrics[-1] if recent_metrics else None
+                
+                analysis = get_coaching_feedback(transcript, latest_metrics)
+                
+                with self.lock:
+                    self.current_session['analysis_cache']['full_analysis'] = {
+                        'analysis': analysis,
+                        'timestamp': time.time(),
+                        'transcript_length': len(transcript)
+                    }
+                
+                print(f"✅ Análise DeepSeek concluída: {len(analysis)} chars")
+                
+            except Exception as e:
+                print(f"❌ Erro na análise: {e}")
+        
+        threading.Thread(target=analyze, daemon=True).start()
+    
+    def reset_session(self):
+        with self.lock:
+            self.metrics_history.clear()
+            self.transcripts.clear()
+            self.current_session = {
+                'start_time': time.time(),
+                'last_update': time.time(),
+                'total_frames': 0,
+                'analysis_cache': {}
+            }
 
-class FeedbackOutput(BaseModel):
-    text: str
-    highlights: List[str] = []
+# Instância global
+data_store = DataStore()
 
+# FastAPI App
+app = FastAPI(title="Edge Coach API", version="1.0.0")
 
-def compose_feedback_fallback(inp: FeedbackInput) -> dict:
-    bullets = []
-    if inp.vices:
-        bullets.append(f"Vícios de linguagem detectados: {', '.join([v['phrase'] for v in inp.vices])}.")
-    else:
-        bullets.append("Sem vícios de linguagem significativos detectados.")
+# CORS para Streamlit
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    if inp.poses:
-        bullets.append(f"Foram detectadas {len(inp.poses)} observações de pose durante a apresentação.")
+@app.get("/")
+async def root():
+    return {
+        "message": "Edge Coach API", 
+        "status": "running",
+        "endpoints": ["/metrics", "/transcript", "/stats", "/analysis"]
+    }
 
-    if inp.transcript and len(inp.transcript) > 0:
-        # brief content suggestion
-        first_sentence = inp.transcript.strip().split('.')[0][:200]
-        bullets.append(f"Conteúdo: comece com: '{first_sentence.strip()}'...")
-
-    summary = " ".join(bullets)
-    highlights = bullets
-    return {"text": summary, "highlights": highlights}
-
-
-@app.post("/feedback", response_model=FeedbackOutput)
-def feedback_service(inp: FeedbackInput, model: str = "llama2"):
-    # Build a prompt for Ollama to compose a cohesive feedback text
-    prompt_parts = ["Junte os pontos abaixo e gere um feedback corrido e profissional em português:"]
-    prompt_parts.append("TRANSCRIPT:\n" + (inp.transcript or ""))
-    if inp.vices:
-        prompt_parts.append("VICIOS:\n" + json.dumps(inp.vices, ensure_ascii=False))
-    if inp.poses:
-        prompt_parts.append("POSES:\n" + json.dumps(inp.poses, ensure_ascii=False))
-    if inp.extra:
-        prompt_parts.append("EXTRA:\n" + json.dumps(inp.extra, ensure_ascii=False))
-
-    prompt = "\n\n".join(prompt_parts)
-
+@app.post("/metrics")
+async def receive_metrics(metrics: MetricsData):
+    """Recebe métricas de vídeo"""
     try:
-        res = call_ollama(prompt, model)
-        # accept either raw text or structured JSON
-        if isinstance(res, dict) and "text" in res:
-            text = res.get("text")
-            highlights = res.get("highlights", [])
-        elif isinstance(res, str):
-            text = res
-            highlights = []
-        else:
-            # if model returned JSON structure
-            text = res.get("summary", str(res)) if isinstance(res, dict) else str(res)
-            highlights = res.get("highlights", []) if isinstance(res, dict) else []
-        return FeedbackOutput(text=text, highlights=highlights)
-    except Exception:
-        fb = compose_feedback_fallback(inp)
-        return FeedbackOutput(text=fb["text"], highlights=fb["highlights"])
+        data_store.add_metrics(metrics)
+        return {"status": "success", "timestamp": metrics.timestamp}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.post("/analyze", response_model=AnalyzeResponse)
-def analyze(req: AnalyzeRequest):
-    if not req.text or not req.text.strip():
-        raise HTTPException(status_code=400, detail="campo 'text' vazio")
-
-    # First, try to call local Ollama daemon
+@app.post("/transcript")
+async def receive_transcript(transcript: TranscriptData):
+    """Recebe transcrição de áudio"""
     try:
-        result = call_ollama(req.text, req.model)
-        if not isinstance(result, dict) or "repetitions" not in result:
-            # invalid response, fallback
-            raise RuntimeError("Resposta do Ollama não no formato esperado")
-    except Exception:
-        result = local_filler_analysis(req.text)
+        data_store.add_transcript(transcript)
+        return {"status": "success", "length": len(transcript.transcript)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    # Normalize repetitions into PhraseCount dataclass list
-    reps = [PhraseCount(**r) for r in result.get("repetitions", [])]
-    return AnalyzeResponse(
-        summary=result.get("summary", ""), repetitions=reps, suggestions=result.get("suggestions", [])
-    )
+@app.get("/stats")
+async def get_stats():
+    """Retorna estatísticas atuais"""
+    try:
+        stats = data_store.get_current_stats()
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/metrics")
+async def get_metrics(count: int = 50):
+    """Retorna histórico de métricas"""
+    try:
+        metrics = data_store.get_latest_metrics(count)
+        return {"metrics": metrics, "count": len(metrics)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/transcript")
+async def get_transcript():
+    """Retorna transcrição completa"""
+    try:
+        full_text = data_store.get_full_transcript()
+        return {
+            "transcript": full_text,
+            "length": len(full_text),
+            "segments": data_store.transcripts
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/analysis")
+async def get_analysis():
+    """Retorna análises disponíveis"""
+    try:
+        cache = data_store.current_session['analysis_cache']
+        transcript = data_store.get_full_transcript()
+        
+        # Análise rápida se não houver cache
+        quick_analysis = None
+        if transcript and len(transcript) > 20:
+            quick_analysis = quick_text_analysis(transcript[:500])
+        
+        return {
+            "full_analysis": cache.get('full_analysis'),
+            "quick_analysis": quick_analysis,
+            "transcript_available": len(transcript) > 0,
+            "transcript_length": len(transcript)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/analysis/generate")
+async def generate_analysis():
+    """Force geração de nova análise"""
+    try:
+        transcript = data_store.get_full_transcript()
+        
+        if not transcript or len(transcript) < 20:
+            raise HTTPException(status_code=400, detail="Transcrição insuficiente")
+        
+        # Análise com métricas mais recentes
+        recent_metrics = data_store.get_latest_metrics(50)
+        latest_metrics = recent_metrics[-1] if recent_metrics else None
+        
+        analysis = get_coaching_feedback(transcript, latest_metrics)
+        
+        # Salvar no cache
+        with data_store.lock:
+            data_store.current_session['analysis_cache']['manual_analysis'] = {
+                'analysis': analysis,
+                'timestamp': time.time(),
+                'transcript_length': len(transcript)
+            }
+        
+        return {"analysis": analysis, "status": "generated"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/reset")
+async def reset_session():
+    """Reset da sessão atual"""
+    try:
+        data_store.reset_session()
+        return {"status": "session reset", "timestamp": time.time()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+async def health_check():
+    """Health check da API"""
+    return {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "metrics_count": len(data_store.metrics_history),
+        "transcripts_count": len(data_store.transcripts)
+    }
 
 if __name__ == "__main__":
-    # Minimal runner for local development
-    if not HAS_DEPENDENCIES:
-        raise RuntimeError("Dependências de runtime não instaladas. Rode 'pip install -r requirements.txt'.")
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    import uvicorn
+    print("🚀 Iniciando Edge Coach API...")
+    print("📊 Dashboard: http://localhost:8501")
+    print("🔧 API Docs: http://localhost:8000/docs")
+    uvicorn.run(app, host="0.0.0.0", port=8000)

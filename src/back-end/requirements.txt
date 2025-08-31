@@ -1,4 +1,13 @@
-fastapi>=0.95.0
-uvicorn[standard]>=0.22.0
-httpx>=0.24.0
-pydantic>=1.10.0
+mediapipe
+opencv-python
+numpy
+sounddevice
+soundfile
+librosa
+webrtcvad
+fastapi
+uvicorn
+streamlit
+requests
+scipy
+websockets
