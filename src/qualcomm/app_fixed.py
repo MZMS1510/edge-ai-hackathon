@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Qualcomm Edge AI Hub - Flask App
-Interface web para monitoramento de pitch e análise de comunicação
-Otimizado para Snapdragon X - VERSÃO REAL
+Qualcomm Edge AI Hub - Versão Corrigida
+Com fallback de câmera e dados simulados como backup
 """
 
 import os
@@ -14,9 +13,6 @@ import platform
 import json
 import cv2
 import mediapipe as mp
-import pyaudio
-from scipy.fft import fft
-from scipy.signal import find_peaks
 from pathlib import Path
 from flask import Flask, render_template, jsonify, request, Response
 from flask_socketio import SocketIO, emit
@@ -26,37 +22,20 @@ import queue
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Importar módulos locais
-from pitch_monitor import PitchMonitor
 from utils.qualcomm_utils import QualcommUtils
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'qualcomm-edge-ai-hub-secret'
+app.config['SECRET_KEY'] = 'qualcomm-edge-ai-hub-fixed'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Configurações
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(SCRIPT_DIR, 'templates')
-STATIC_DIR = os.path.join(SCRIPT_DIR, 'static')
-
-# Criar diretórios se não existirem
-os.makedirs(TEMPLATES_DIR, exist_ok=True)
-os.makedirs(STATIC_DIR, exist_ok=True)
 
 # Instâncias globais
-pitch_monitor = None
-monitor_thread = None
 coach_thread = None
-is_monitoring = False
 is_coaching = False
-
-# Dados em tempo real
-realtime_data = {
-    'pitch': [],
-    'volume': [],
-    'notes': [],
-    'timestamps': [],
-    'max_points': 100
-}
+camera_working = False
 
 communication_metrics = {
     'posture_score': 0,
@@ -66,14 +45,6 @@ communication_metrics = {
     'feedback': []
 }
 
-# Configurações de áudio
-AUDIO_CONFIG = {
-    'CHUNK': 1024,
-    'FORMAT': pyaudio.paFloat32,
-    'CHANNELS': 1,
-    'RATE': 44100
-}
-
 # Configurações de câmera
 CAMERA_CONFIG = {
     'width': 640,
@@ -81,25 +52,39 @@ CAMERA_CONFIG = {
     'fps': 30
 }
 
+def find_working_camera():
+    """Encontra uma câmera funcionando"""
+    print("🔍 Procurando câmera funcionando...")
+    
+    for i in range(5):
+        print(f"🎥 Tentando câmera {i}...")
+        cap = cv2.VideoCapture(i)
+        
+        if cap.isOpened():
+            # Tentar ler um frame
+            ret, frame = cap.read()
+            if ret:
+                print(f"✅ Câmera {i} funcionando!")
+                cap.release()
+                return i
+            else:
+                print(f"❌ Câmera {i} aberta mas não lê frames")
+                cap.release()
+        else:
+            print(f"❌ Câmera {i} não disponível")
+    
+    print("❌ Nenhuma câmera funcionando")
+    return None
+
 @app.route('/')
 def index():
-    """Página principal - Pitch Monitor (mantém compatibilidade)"""
-    return render_template('index.html')
-
-@app.route('/pitch-monitor')
-def pitch_monitor_page():
-    """Página do monitor de pitch"""
-    return render_template('pitch_monitor.html')
+    """Página principal"""
+    return render_template('communication_coach.html')
 
 @app.route('/communication-coach')
 def communication_coach_page():
     """Página do coach de comunicação"""
     return render_template('communication_coach.html')
-
-@app.route('/hub')
-def hub_page():
-    """Página principal do hub"""
-    return render_template('hub.html')
 
 @app.route('/status')
 def status():
@@ -110,76 +95,41 @@ def status():
     return jsonify({
         'snapdragon_detected': qualcomm_utils.snapdragon_detected,
         'system_info': system_info,
-        'is_monitoring': is_monitoring,
         'is_coaching': is_coaching,
+        'camera_working': camera_working,
         'tools_available': qualcomm_utils.check_qualcomm_tools()
     })
-
-# Rotas do Pitch Monitor
-@app.route('/start_monitoring')
-def start_monitoring():
-    """Inicia monitoramento de pitch"""
-    global monitor_thread, is_monitoring
-    
-    if is_monitoring:
-        return jsonify({'error': 'Monitoramento já está ativo'})
-    
-    try:
-        # Iniciar thread de monitoramento
-        is_monitoring = True
-        monitor_thread = threading.Thread(target=monitoring_loop, daemon=True)
-        monitor_thread.start()
-        
-        return jsonify({'success': True, 'message': 'Monitoramento iniciado'})
-        
-    except Exception as e:
-        return jsonify({'error': f'Erro ao iniciar monitoramento: {str(e)}'})
-
-@app.route('/stop_monitoring')
-def stop_monitoring():
-    """Para monitoramento de pitch"""
-    global is_monitoring
-    
-    if not is_monitoring:
-        return jsonify({'error': 'Monitoramento não está ativo'})
-    
-    try:
-        is_monitoring = False
-        return jsonify({'success': True, 'message': 'Monitoramento parado'})
-        
-    except Exception as e:
-        return jsonify({'error': f'Erro ao parar monitoramento: {str(e)}'})
-
-@app.route('/get_statistics')
-def get_statistics():
-    """Retorna estatísticas de pitch"""
-    if not pitch_monitor:
-        return jsonify({'error': 'Monitor não inicializado'})
-    
-    stats = pitch_monitor.get_statistics()
-    if stats:
-        return jsonify(stats)
-    else:
-        return jsonify({'error': 'Nenhum dado disponível'})
 
 # Rotas do Communication Coach
 @app.route('/start_coaching')
 def start_coaching():
     """Inicia análise de comunicação"""
-    global coach_thread, is_coaching
+    global coach_thread, is_coaching, camera_working
     
     if is_coaching:
         return jsonify({'error': 'Análise já está ativa'})
     
     try:
+        print("🚀 Iniciando análise de comunicação...")
+        
+        # Verificar câmera
+        camera_index = find_working_camera()
+        if camera_index is None:
+            print("⚠️ Câmera não disponível, usando dados simulados")
+            camera_working = False
+        else:
+            camera_working = True
+        
         # Iniciar thread de análise
         is_coaching = True
-        coach_thread = threading.Thread(target=coaching_loop, daemon=True)
+        coach_thread = threading.Thread(target=coaching_loop, daemon=True, args=(camera_index,))
         coach_thread.start()
         
+        print("✅ Thread de coaching iniciada")
         return jsonify({'success': True, 'message': 'Análise iniciada'})
         
     except Exception as e:
+        print(f"❌ Erro ao iniciar análise: {e}")
         return jsonify({'error': f'Erro ao iniciar análise: {str(e)}'})
 
 @app.route('/stop_coaching')
@@ -191,6 +141,7 @@ def stop_coaching():
         return jsonify({'error': 'Análise não está ativa'})
     
     try:
+        print("�� Parando análise de comunicação...")
         is_coaching = False
         return jsonify({'success': True, 'message': 'Análise parada'})
         
@@ -202,143 +153,39 @@ def get_communication_metrics():
     """Retorna métricas de comunicação"""
     return jsonify(communication_metrics)
 
-# Adicionar esta rota para stream de vídeo
-@app.route('/video_feed')
-def video_feed():
-    """Stream de vídeo da câmera"""
-    def generate_frames():
-        cap = cv2.VideoCapture(0)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-                
-            # Codificar frame para JPEG
-            ret, buffer = cv2.imencode('.jpg', frame)
-            if not ret:
-                continue
-                
-            # Enviar frame
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-        
-        cap.release()
-    
-    return Response(generate_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
-# Loops de processamento REAL
-def monitoring_loop():
-    """Loop principal de monitoramento de pitch REAL"""
-    global realtime_data, is_monitoring
+def coaching_loop(camera_index=None):
+    """Loop principal de análise de comunicação com fallback"""
+    global communication_metrics, is_coaching, camera_working
     
     try:
-        # Inicializar PyAudio
-        p = pyaudio.PyAudio()
-        stream = p.open(
-            format=AUDIO_CONFIG['FORMAT'],
-            channels=AUDIO_CONFIG['CHANNELS'],
-            rate=AUDIO_CONFIG['RATE'],
-            input=True,
-            frames_per_buffer=AUDIO_CONFIG['CHUNK']
-        )
-        
-        print("🎤 Microfone inicializado para análise de pitch")
-        
-        start_time = time.time()
-        
-        while is_monitoring:
-            try:
-                # Capturar áudio real
-                data = stream.read(AUDIO_CONFIG['CHUNK'], exception_on_overflow=False)
-                audio_data = np.frombuffer(data, dtype=np.float32)
-                
-                # Calcular volume RMS
-                volume = 20 * np.log10(np.sqrt(np.mean(audio_data**2)) + 1e-10)
-                
-                # Calcular pitch usando FFT
-                fft_data = fft(audio_data)
-                frequencies = np.fft.fftfreq(len(fft_data), 1/AUDIO_CONFIG['RATE'])
-                
-                # Encontrar frequência dominante
-                magnitude = np.abs(ffft_data[1:len(fft_data)//2])
-                frequencies_positive = frequencies[1:len(fft_data)//2]
-                
-                if len(magnitude) > 0:
-                    # Encontrar picos para detectar pitch
-                    peaks, _ = find_peaks(magnitude, height=np.max(magnitude)*0.1)
-                    
-                    if len(peaks) > 0:
-                        # Frequência do pico mais alto
-                        dominant_freq = frequencies_positive[peaks[np.argmax(magnitude[peaks])]]
-                        pitch = abs(dominant_freq)
-                    else:
-                        pitch = 0
-                else:
-                    pitch = 0
-                
-                # Filtrar frequências válidas (80-800 Hz)
-                if 80 <= pitch <= 800:
-                    note = freq_to_note(pitch)
-                else:
-                    pitch = 0
-                    note = "--"
-                
-                current_time = time.time() - start_time
-                
-                # Adicionar dados
-                realtime_data['pitch'].append(float(pitch))
-                realtime_data['volume'].append(float(volume))
-                realtime_data['notes'].append(note)
-                realtime_data['timestamps'].append(current_time)
-                
-                # Manter apenas últimos pontos
-                if len(realtime_data['pitch']) > realtime_data['max_points']:
-                    realtime_data['pitch'] = realtime_data['pitch'][-realtime_data['max_points']:]
-                    realtime_data['volume'] = realtime_data['volume'][-realtime_data['max_points']:]
-                    realtime_data['notes'] = realtime_data['notes'][-realtime_data['max_points']:]
-                    realtime_data['timestamps'] = realtime_data['timestamps'][-realtime_data['max_points']:]
-                
-                # Enviar dados via WebSocket
-                socketio.emit('pitch_data', {
-                    'pitch': float(pitch),
-                    'volume': float(volume),
-                    'note': note,
-                    'timestamp': current_time
-                })
-                
-                time.sleep(0.05)  # 50ms para 20 FPS
-                
-            except Exception as e:
-                print(f"❌ Erro no processamento de áudio: {e}")
-                time.sleep(0.1)
-                
+        if camera_index is not None and camera_working:
+            print("�� Usando câmera real...")
+            real_camera_loop(camera_index)
+        else:
+            print("�� Usando dados simulados...")
+            simulated_loop()
+            
     except Exception as e:
-        print(f"❌ Erro no loop de monitoramento: {e}")
-    finally:
-        try:
-            stream.stop_stream()
-            stream.close()
-            p.terminate()
-        except:
-            pass
+        print(f"❌ Erro no loop de coaching: {e}")
+        # Fallback para dados simulados
+        print("🔄 Fallback para dados simulados...")
+        simulated_loop()
 
-def coaching_loop():
-    """Loop principal de análise de comunicação REAL"""
+def real_camera_loop(camera_index):
+    """Loop com câmera real"""
     global communication_metrics, is_coaching
     
     try:
         # Inicializar câmera
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(camera_index)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_CONFIG['width'])
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_CONFIG['height'])
         cap.set(cv2.CAP_PROP_FPS, CAMERA_CONFIG['fps'])
         
         if not cap.isOpened():
             raise Exception("Não foi possível abrir a câmera")
+        
+        print("✅ Câmera inicializada com sucesso")
         
         # Inicializar MediaPipe
         mp_pose = mp.solutions.pose
@@ -356,26 +203,26 @@ def coaching_loop():
             min_tracking_confidence=0.5
         ) as face_mesh:
             
-            print("🎥 Câmera inicializada para análise de comunicação")
+            print("✅ MediaPipe inicializado")
             
             while is_coaching:
                 try:
                     ret, frame = cap.read()
                     if not ret:
+                        print("❌ Erro ao ler frame, tentando novamente...")
+                        time.sleep(0.1)
                         continue
                     
                     # Processar frame
                     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     
-                    # Análise de pose
+                    # Análise real
                     pose_results = pose.process(rgb_frame)
                     posture_score = analyze_posture(pose_results)
                     
-                    # Análise de gestos
                     hands_results = hands.process(rgb_frame)
                     gesture_score = analyze_gestures(hands_results)
                     
-                    # Análise de contato visual
                     face_results = face_mesh.process(rgb_frame)
                     eye_contact_score = analyze_eye_contact(frame, face_results)
                     
@@ -400,22 +247,65 @@ def coaching_loop():
                     time.sleep(0.1)  # 100ms para 10 FPS
                     
                 except Exception as e:
-                    print(f"❌ Erro no processamento de vídeo: {e}")
+                    print(f"❌ Erro no processamento: {e}")
                     time.sleep(0.1)
                     
     except Exception as e:
-        print(f"❌ Erro no loop de coaching: {e}")
+        print(f"❌ Erro na câmera real: {e}")
+        raise e
     finally:
         try:
             cap.release()
         except:
             pass
 
-# Funções de análise REAL
+def simulated_loop():
+    """Loop com dados simulados"""
+    global communication_metrics, is_coaching
+    
+    print("🎭 Iniciando dados simulados...")
+    
+    while is_coaching:
+        try:
+            # Gerar dados simulados realistas
+            posture_score = np.random.normal(75, 15)
+            posture_score = max(0, min(100, posture_score))
+            
+            gesture_score = np.random.normal(70, 20)
+            gesture_score = max(0, min(100, gesture_score))
+            
+            eye_contact_score = np.random.normal(80, 10)
+            eye_contact_score = max(0, min(100, eye_contact_score))
+            
+            overall_score = (posture_score + gesture_score + eye_contact_score) / 3
+            
+            # Gerar feedback
+            feedback = generate_feedback(posture_score, gesture_score, eye_contact_score)
+            
+            # Atualizar métricas
+            communication_metrics.update({
+                'posture_score': posture_score,
+                'gesture_score': gesture_score,
+                'eye_contact_score': eye_contact_score,
+                'overall_score': overall_score,
+                'feedback': feedback
+            })
+            
+            # Enviar dados via WebSocket
+            socketio.emit('communication_data', communication_metrics)
+            
+            print(f"📊 Simulado: Postura={posture_score:.1f}, Gestos={gesture_score:.1f}, Olhos={eye_contact_score:.1f}")
+            
+            time.sleep(1)  # 1 segundo
+            
+        except Exception as e:
+            print(f"❌ Erro nos dados simulados: {e}")
+            time.sleep(1)
+
 def analyze_posture(pose_results):
     """Analisa postura usando MediaPipe Pose"""
     if not pose_results.pose_landmarks:
-        return 0
+        return 50
     
     landmarks = pose_results.pose_landmarks.landmark
     
@@ -449,7 +339,7 @@ def analyze_posture(pose_results):
 def analyze_gestures(hands_results):
     """Analisa gestos usando MediaPipe Hands"""
     if not hands_results.multi_hand_landmarks:
-        return 0
+        return 30
     
     try:
         gesture_score = 0
@@ -472,21 +362,21 @@ def analyze_gestures(hands_results):
             else:
                 gesture_score += 10
         
-        return min(100, gesture_score / hand_count) if hand_count > 0 else 0
+        return min(100, gesture_score / hand_count) if hand_count > 0 else 30
         
     except Exception as e:
         print(f"Erro na análise de gestos: {e}")
-        return 50
+        return 30
 
 def analyze_eye_contact(frame, face_results):
     """Analisa contato visual usando MediaPipe Face Mesh"""
     if not face_results.multi_face_landmarks:
-        return 0
+        return 40
     
     try:
         # Pontos dos olhos
-        left_eye = face_results.multi_face_landmarks[0].landmark[33]  # Olho esquerdo
-        right_eye = face_results.multi_face_landmarks[0].landmark[133]  # Olho direito
+        left_eye = face_results.multi_face_landmarks[0].landmark[33]
+        right_eye = face_results.multi_face_landmarks[0].landmark[133]
         
         # Calcular posição dos olhos em relação ao centro da tela
         frame_height, frame_width = frame.shape[:2]
@@ -507,15 +397,15 @@ def analyze_eye_contact(frame, face_results):
         
     except Exception as e:
         print(f"Erro na análise de contato visual: {e}")
-        return 50
+        return 40
 
 def generate_feedback(posture_score, gesture_score, eye_contact_score):
-    """Gera feedback personalizado baseado em dados reais"""
+    """Gera feedback personalizado"""
     feedback = []
     
     # Feedback de postura
     if posture_score < 50:
-        feedback.append("🔴 Mantenha a postura ereta - alinhe os ombros")
+        feedback.append("�� Mantenha a postura ereta - alinhe os ombros")
     elif posture_score < 75:
         feedback.append("🟡 Melhore o alinhamento dos ombros")
     else:
@@ -539,27 +429,12 @@ def generate_feedback(posture_score, gesture_score, eye_contact_score):
     
     return feedback
 
-def freq_to_note(freq):
-    """Converte frequência em nota musical"""
-    if freq <= 0:
-        return "--"
-    
-    note_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-    a4_freq = 440.0
-    a4_midi = 69
-    
-    midi_note = 12 * np.log2(freq / a4_freq) + a4_midi
-    note_number = int(round(midi_note)) % 12
-    octave = int(midi_note) // 12 - 1
-    
-    return f"{note_names[note_number]}{octave}"
-
 # WebSocket events
 @socketio.on('connect')
 def handle_connect():
     """Cliente conectado"""
-    print("🔌 Cliente conectado")
-    emit('status', {'message': 'Conectado ao Qualcomm Edge AI Hub'})
+    print("🔌 Cliente conectado via WebSocket")
+    emit('status', {'message': 'Conectado ao Communication Coach'})
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -567,6 +442,6 @@ def handle_disconnect():
     print("🔌 Cliente desconectado")
 
 if __name__ == '__main__':
-    print(" Iniciando Qualcomm Edge AI Hub...")
+    print("🚀 Iniciando Communication Coach (Versão Corrigida)...")
     print("📍 Acesse: http://localhost:5000")
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)

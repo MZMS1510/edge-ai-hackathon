@@ -158,7 +158,4 @@ class PitchMonitor:
         }
         
         return stats
-```
-
-```
 
