@@ -607,47 +607,9 @@
       "strengths_count": 0,
       "weaknesses_count": 0,
       "recommendations_count": 4
-    },
-    {
-      "id": "analysis_33",
-      "timestamp": "2025-08-31T12:03:26.109479",
-      "date": "31/08/2025",
-      "time": "12:03",
-      "duration_minutes": 0.3,
-      "overall_score": 50.8,
-      "performance_level": "Precisa Melhorar",
-      "total_frames": 15,
-      "report_file": "analysis_report_20250831_120326.json",
-      "summary": {
-        "posture": 50.0,
-        "gesture": 45.0,
-        "eye_contact": 56.5
-      },
-      "strengths_count": 0,
-      "weaknesses_count": 0,
-      "recommendations_count": 4
-    },
-    {
-      "id": "analysis_34",
-      "timestamp": "2025-08-31T12:07:43.316101",
-      "date": "31/08/2025",
-      "time": "12:07",
-      "duration_minutes": 0.2,
-      "overall_score": 50.5,
-      "performance_level": "Precisa Melhorar",
-      "total_frames": 12,
-      "report_file": "analysis_report_20250831_120743.json",
-      "summary": {
-        "posture": 48.8,
-        "gesture": 47.1,
-        "eye_contact": 55.2
-      },
-      "strengths_count": 0,
-      "weaknesses_count": 1,
-      "recommendations_count": 4
     }
   ],
-  "total_analyses": 34,
-  "last_updated": "2025-08-31T12:07:43.316101",
+  "total_analyses": 32,
+  "last_updated": "2025-08-31T12:02:00.598114",
   "created_date": "2025-08-31T09:27:31.925664"
 }

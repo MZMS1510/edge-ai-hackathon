@@ -445,10 +445,10 @@
         ❌ Fechar
     </button>
     
-    <!-- Conteúdo principal do Pitch Practice -->
+    <!-- Conteúdo principal do Pitch Pract -->
     <div class="container">
         <div class="header">
-            <h1>🎤 Pitch Practice</h1>
+            <h1>🎤 Pitch Pract</h1>
             <p>Aprimore suas habilidades de apresentação com IA em tempo real</p>
             <div class="subtitle">Análise de postura, gestos e contato visual</div>
         </div>
@@ -463,7 +463,7 @@
                         </div>
                         
                         <div id="videoPlaceholder">
-                            Clique em "Iniciar Pitch Practice" para começar
+                            Clique em "Iniciar Pitch Pract" para começar
                         </div>
                         <video id="videoElement" autoplay muted style="display: none;"></video>
                         <canvas id="landmarksCanvas" class="landmarks-canvas"></canvas>
@@ -509,7 +509,7 @@
         
         <div class="controls">
             <button class="btn" id="startBtn" onclick="startAnalysis()">
-                🎤 Iniciar Pitch Practice
+                🎤 Iniciar Pitch Pract
             </button>
             <button class="btn stop" id="stopBtn" onclick="stopAnalysis()" disabled>
                 🛑 Finalizar Sessão
@@ -683,12 +683,12 @@
                         
                         console.log('Pitch Practice iniciado');
                     } else {
-                        alert('Erro ao iniciar Pitch Practice: ' + data.error);
+                        alert('Erro ao iniciar Pitch Pract: ' + data.error);
                     }
                 })
                 .catch(error => {
                     console.error('Erro:', error);
-                    alert('Erro ao iniciar Pitch Practice');
+                    alert('Erro ao iniciar Pitch Pract');
                 });
         }
         

@@ -1,0 +1,35 @@
+{
+  "session_info": {
+    "start_time": "2025-08-31T12:03:07.903604",
+    "end_time": "2025-08-31T12:03:25.994701",
+    "duration_minutes": 0.3,
+    "total_frames": 15
+  },
+  "average_scores": {
+    "posture": 50.0,
+    "gesture": 45.0,
+    "eye_contact": 56.5,
+    "overall": 50.8
+  },
+  "improvements": {
+    "posture": 0.9,
+    "gesture": -0.7,
+    "eye_contact": -0.1,
+    "overall": 0.1
+  },
+  "strengths": [],
+  "weaknesses": [],
+  "recommendations": [
+    "🧘‍♂️ Pratique manter os ombros alinhados e a coluna ereta",
+    "🟡 Use mais gestos com as mãos para enfatizar pontos importantes",
+    "🔴 Mantenha contato visual direto com a câmera/audiência",
+    "📈 Considere praticar técnicas de apresentação em público"
+  ],
+  "progress_indicators": [],
+  "performance_level": "Precisa Melhorar",
+  "next_steps": [
+    "🧘‍♂️ Pratique por 10-15 minutos diariamente",
+    "📚 Considere um curso de oratória",
+    "🔄 Agende uma nova sessão de análise em 1 semana"
+  ]
+}

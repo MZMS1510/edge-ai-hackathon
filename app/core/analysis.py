@@ -110,8 +110,8 @@ class CommunicationAnalyzer:
     def analyze_posture(self, pose_results, last_score=None):
         """Analisa postura com thresholds rigorosos baseados no modelo treinado"""
         if not pose_results.pose_landmarks:
-            # Score baixo quando não detecta pose
-            base_score = 30 + np.random.normal(0, 5)
+            # Score neutro quando não detecta pose (não penalizar tanto)
+            base_score = 50 + np.random.normal(0, 3)
             return self.smooth_score(base_score, 'posture')
         
         landmarks = pose_results.pose_landmarks.landmark
@@ -159,8 +159,8 @@ class CommunicationAnalyzer:
     def analyze_gestures(self, hands_results, last_score=None):
         """Analisa gestos com lógica correta baseada no movimento real"""
         if not hands_results.multi_hand_landmarks:
-            # Score baixo quando não detecta mãos (sem gestos)
-            base_score = 30 + np.random.normal(0, 5)
+            # Score neutro quando não detecta mãos (não penalizar tanto)
+            base_score = 45 + np.random.normal(0, 3)
             return self.smooth_score(base_score, 'gesture')
         
         try:
@@ -218,26 +218,30 @@ class CommunicationAnalyzer:
 
     def analyze_eye_contact(self, frame, face_results, last_score=None):
         """Analisa contato visual com thresholds rigorosos"""
-        if not face_results.detections:
-            # Score baixo quando não detecta rosto
-            base_score = 30 + np.random.normal(0, 5)
+        if not face_results.multi_face_landmarks:
+            # Score neutro quando não detecta rosto (não penalizar tanto)
+            base_score = 55 + np.random.normal(0, 3)
             return self.smooth_score(base_score, 'eye')
         
         try:
-            # Usar detecção de rosto simples
+            # Usar FaceMesh landmarks
             frame_height, frame_width = frame.shape[:2]
             center_x = frame_width / 2
             center_y = frame_height / 2
             
-            # Calcular posição do rosto detectado
-            detection = face_results.detections[0]
-            bbox = detection.location_data.relative_bounding_box
+            # Calcular posição do rosto detectado usando landmarks dos olhos
+            face_landmarks = face_results.multi_face_landmarks[0]
             
-            face_center_x = (bbox.xmin + bbox.width / 2) * frame_width
-            face_center_y = (bbox.ymin + bbox.height / 2) * frame_height
+            # Pontos dos olhos (índices aproximados do FaceMesh)
+            left_eye_center = face_landmarks.landmark[159]  # Ponto central do olho esquerdo
+            right_eye_center = face_landmarks.landmark[386]  # Ponto central do olho direito
+            
+            # Calcular centro dos olhos
+            eye_center_x = ((left_eye_center.x + right_eye_center.x) / 2) * frame_width
+            eye_center_y = ((left_eye_center.y + right_eye_center.y) / 2) * frame_height
             
             # Distância do centro
-            distance_from_center = np.sqrt((face_center_x - center_x)**2 + (face_center_y - center_y)**2)
+            distance_from_center = np.sqrt((eye_center_x - center_x)**2 + (eye_center_y - center_y)**2)
             
             # Score baseado na proximidade do centro
             max_distance = np.sqrt(center_x**2 + center_y**2)
