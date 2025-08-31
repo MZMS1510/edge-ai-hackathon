@@ -88,7 +88,7 @@ pip install -r requirements.txt
 
 3. **Execute a aplicação**:
 ```bash
-python main.py
+python run.py
 ```
 
 4. **Acesse no navegador**:
