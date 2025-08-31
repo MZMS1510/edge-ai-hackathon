@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Communication Coach - Qualcomm Edge AI</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="/static/css/history.css">
     <style>
         * {
             margin: 0;
@@ -118,6 +119,17 @@
             padding: 5px 10px;
             border-radius: 15px;
             font-size: 0.8em;
+        }
+        
+        /* Canvas para desenhar landmarks */
+        .landmarks-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
         }
         
         .feedback-panel {
@@ -268,6 +280,57 @@
             100% { opacity: 1; }
         }
         
+        /* Botão do histórico */
+        .history-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 999;
+            transition: all 0.3s ease;
+        }
+        
+        .history-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .history-toggle .badge {
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        /* Controles de visualização */
+        .visualization-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.8em;
+        }
+        
+        .visualization-controls label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .visualization-controls input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        
         @media (max-width: 1200px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -298,6 +361,33 @@
     </style>
 </head>
 <body>
+    <!-- Botão do histórico -->
+    <button class="history-toggle" id="history-toggle">
+        📊 Histórico
+        <span class="badge" id="history-count">0</span>
+    </button>
+    
+    <!-- Painel do histórico -->
+    <div class="history-panel" id="history-panel">
+        <div class="history-header">
+            <h2>📊 Histórico de Análises</h2>
+        </div>
+        <div class="history-content">
+            <div id="history-statistics">
+                <!-- Estatísticas serão inseridas aqui -->
+            </div>
+            <div class="history-actions">
+                <button class="btn-view" id="export-history">
+                    📤 Exportar Histórico
+                </button>
+            </div>
+            <div id="history-list">
+                <!-- Lista de análises será inserida aqui -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Conteúdo existente do Communication Coach -->
     <div class="container">
         <div class="header">
             <h1>🎥 Communication Coach</h1>
@@ -317,10 +407,19 @@
                             <span class="status-indicator status-inactive" id="statusIndicator"></span>
                             Status: Aguardando
                         </div>
+                        
+                        <!-- Controles de visualização -->
+                        <div class="visualization-controls">
+                            <label><input type="checkbox" id="showPose" checked> Pose</label>
+                            <label><input type="checkbox" id="showHands" checked> Mãos</label>
+                            <label><input type="checkbox" id="showFace" checked> Rosto</label>
+                        </div>
+                        
                         <div id="videoPlaceholder">
                             Clique em "Iniciar Análise" para começar
                         </div>
                         <video id="videoElement" autoplay muted style="display: none;"></video>
+                        <canvas id="landmarksCanvas" class="landmarks-canvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -362,19 +461,35 @@
             </button>
         </div>
     </div>
-
+    
+    <!-- Scripts -->
+    <script src="/static/js/history_manager.js"></script>
     <script>
         // Socket.IO
         const socket = io();
         
         let isAnalyzing = false;
         let videoStream = null;
+        let canvas = null;
+        let ctx = null;
         
         // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
             setupSocketIO();
             setupVideoStream();
+            setupCanvas();
+            updateHistoryCount();
         });
+        
+        function setupCanvas() {
+            canvas = document.getElementById('landmarksCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Ajustar tamanho do canvas
+            const videoFeed = document.getElementById('videoFeed');
+            canvas.width = videoFeed.offsetWidth;
+            canvas.height = videoFeed.offsetHeight;
+        }
         
         function setupSocketIO() {
             socket.on('connect', function() {
@@ -387,6 +502,135 @@
             
             socket.on('communication_data', function(data) {
                 updateMetrics(data);
+            });
+            
+            // Novo evento para landmarks
+            socket.on('landmarks_data', function(data) {
+                drawLandmarks(data);
+            });
+        }
+        
+        function drawLandmarks(landmarksData) {
+            if (!ctx || !canvas) return;
+            
+            // Limpar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const showPose = document.getElementById('showPose').checked;
+            const showHands = document.getElementById('showHands').checked;
+            const showFace = document.getElementById('showFace').checked;
+            
+            // Desenhar pose
+            if (showPose && landmarksData.pose) {
+                drawPoseLandmarks(landmarksData.pose);
+            }
+            
+            // Desenhar mãos
+            if (showHands && landmarksData.hands) {
+                landmarksData.hands.forEach(hand => {
+                    drawHandLandmarks(hand);
+                });
+            }
+            
+            // Desenhar rosto
+            if (showFace && landmarksData.face) {
+                drawFaceLandmarks(landmarksData.face);
+            }
+        }
+        
+        function drawPoseLandmarks(poseLandmarks) {
+            // Cores para diferentes partes do corpo
+            const colors = {
+                face: '#FF6B6B',
+                torso: '#4ECDC4',
+                leftArm: '#45B7D1',
+                rightArm: '#96CEB4',
+                leftLeg: '#FFEAA7',
+                rightLeg: '#DDA0DD'
+            };
+            
+            // Conexões do MediaPipe Pose
+            const connections = [
+                // Face
+                [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8], [9, 10], [11, 12],
+                // Torso
+                [11, 12], [11, 23], [12, 24], [23, 24],
+                // Braços
+                [11, 13], [13, 15], [15, 17], [15, 19], [15, 21], [12, 14], [14, 16], [16, 18], [16, 20], [16, 22],
+                // Pernas
+                [23, 25], [25, 27], [27, 29], [27, 31], [24, 26], [26, 28], [28, 30], [28, 32]
+            ];
+            
+            // Desenhar conexões
+            connections.forEach(([start, end]) => {
+                if (poseLandmarks[start] && poseLandmarks[end]) {
+                    ctx.strokeStyle = getPoseColor(start);
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(poseLandmarks[start].x * canvas.width, poseLandmarks[start].y * canvas.height);
+                    ctx.lineTo(poseLandmarks[end].x * canvas.width, poseLandmarks[end].y * canvas.height);
+                    ctx.stroke();
+                }
+            });
+            
+            // Desenhar pontos
+            poseLandmarks.forEach((landmark, index) => {
+                ctx.fillStyle = getPoseColor(index);
+                ctx.beginPath();
+                ctx.arc(landmark.x * canvas.width, landmark.y * canvas.height, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+        }
+        
+        function getPoseColor(index) {
+            // Mapear índices para cores
+            if (index <= 10) return '#FF6B6B'; // Face
+            if (index <= 22) return '#4ECDC4'; // Torso e braços
+            return '#45B7D1'; // Pernas
+        }
+        
+        function drawHandLandmarks(handLandmarks) {
+            ctx.strokeStyle = '#FFD93D';
+            ctx.lineWidth = 2;
+            
+            // Conexões das mãos
+            const connections = [
+                [0, 1], [1, 2], [2, 3], [3, 4], // Polegar
+                [0, 5], [5, 6], [6, 7], [7, 8], // Indicador
+                [0, 9], [9, 10], [10, 11], [11, 12], // Médio
+                [0, 13], [13, 14], [14, 15], [15, 16], // Anelar
+                [0, 17], [17, 18], [18, 19], [19, 20] // Mínimo
+            ];
+            
+            // Desenhar conexões
+            connections.forEach(([start, end]) => {
+                if (handLandmarks[start] && handLandmarks[end]) {
+                    ctx.beginPath();
+                    ctx.moveTo(handLandmarks[start].x * canvas.width, handLandmarks[start].y * canvas.height);
+                    ctx.lineTo(handLandmarks[end].x * canvas.width, handLandmarks[end].y * canvas.height);
+                    ctx.stroke();
+                }
+            });
+            
+            // Desenhar pontos
+            handLandmarks.forEach(landmark => {
+                ctx.fillStyle = '#FFD93D';
+                ctx.beginPath();
+                ctx.arc(landmark.x * canvas.width, landmark.y * canvas.height, 2, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+        }
+        
+        function drawFaceLandmarks(faceLandmarks) {
+            ctx.strokeStyle = '#FF6B6B';
+            ctx.lineWidth = 1;
+            
+            // Desenhar pontos do rosto
+            faceLandmarks.forEach(landmark => {
+                ctx.fillStyle = '#FF6B6B';
+                ctx.beginPath();
+                ctx.arc(landmark.x * canvas.width, landmark.y * canvas.height, 1, 0, 2 * Math.PI);
+                ctx.fill();
             });
         }
         
@@ -481,6 +725,11 @@
                 videoPlaceholder.textContent = 'Clique em "Iniciar Análise" para começar';
                 statusIndicator.className = 'status-indicator status-inactive';
                 videoOverlay.innerHTML = '<span class="status-indicator status-inactive"></span>Status: Aguardando';
+                
+                // Limpar canvas quando parar
+                if (ctx) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
             }
         }
         
@@ -514,6 +763,17 @@
                 feedbackListElement.appendChild(li);
             });
         }
+        
+        // Atualizar contador do histórico
+        function updateHistoryCount() {
+            const count = historyManager.historyData.length;
+            document.getElementById('history-count').textContent = count;
+        }
+        
+        // Atualizar contador quando histórico for carregado
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(updateHistoryCount, 1000);
+        });
     </script>
 </body>
 </html>

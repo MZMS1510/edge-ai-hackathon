@@ -1,0 +1,25 @@
+{
+  "analyses": [
+    {
+      "id": "analysis_1",
+      "timestamp": "2025-08-31T07:38:07.487276",
+      "date": "31/08/2025",
+      "time": "07:38",
+      "duration_minutes": 0.5,
+      "overall_score": 45.9,
+      "performance_level": "Precisa Melhorar",
+      "total_frames": 24,
+      "report_file": "analysis_report_20250831_073807.json",
+      "summary": {
+        "posture": 69.0,
+        "gesture": 43.2,
+        "eye_contact": 25.6
+      },
+      "strengths_count": 0,
+      "weaknesses_count": 1,
+      "recommendations_count": 4
+    }
+  ],
+  "total_analyses": 1,
+  "last_updated": "2025-08-31T07:38:07.487276"
+}
