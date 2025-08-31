@@ -5,24 +5,24 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#6366F1', // Indigo primary color
-      light: '#818CF8',
-      dark: '#4F46E5',
+      main: '#667eea', // Modern purple-blue gradient start
+      light: '#8b9cf7',
+      dark: '#4c63d2',
       contrastText: '#FFFFFF'
     },
     secondary: {
-      main: '#EC4899', // Pink secondary color for accent buttons
-      light: '#F472B6',
-      dark: '#DB2777',
+      main: '#764ba2', // Modern purple gradient end
+      light: '#9575cd',
+      dark: '#5e35b1',
       contrastText: '#FFFFFF'
     },
     background: {
-      default: '#F8FAFC', // Light gray background
-      paper: '#FFFFFF'
+      default: '#f8fafc', // Softer light background
+      paper: '#ffffff'
     },
     text: {
-      primary: '#1E293B',
-      secondary: '#64748B'
+      primary: '#1e293b',
+      secondary: '#64748b'
     },
     grey: {
       50: '#F8FAFC',
@@ -37,24 +37,24 @@ const theme = createTheme({
       900: '#0F172A'
     },
     success: {
-      main: '#10B981',
-      light: '#34D399',
-      dark: '#059669'
+      main: '#22c55e',
+      light: '#4ade80',
+      dark: '#16a34a'
     },
     warning: {
-      main: '#F59E0B',
-      light: '#FBBF24',
-      dark: '#D97706'
+      main: '#f59e0b',
+      light: '#fbbf24',
+      dark: '#d97706'
     },
     error: {
-      main: '#EF4444',
-      light: '#F87171',
-      dark: '#DC2626'
+      main: '#ef4444',
+      light: '#f87171',
+      dark: '#dc2626'
     },
     info: {
-      main: '#3B82F6',
-      light: '#60A5FA',
-      dark: '#2563EB'
+      main: '#667eea',
+      light: '#8b9cf7',
+      dark: '#4c63d2'
     }
   },
   typography: {

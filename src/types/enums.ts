@@ -3,6 +3,7 @@
 export enum SessionType {
   AUDIO_ONLY = 'audio_only',
   AUDIO_VIDEO = 'audio_video',
+  SCREEN_RECORDING = 'screen_recording',
   FILE_UPLOAD = 'file_upload'
 }
 

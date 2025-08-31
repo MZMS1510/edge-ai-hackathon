@@ -20,21 +20,26 @@ const SessionConfiguration: React.FC<SessionConfigurationProps> = ({
   };
 
   return (
-    <Card
+    <Box
       sx={{
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        mb: 3,
+        p: 4,
+        height: '100%',
+        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+        borderRadius: 2,
       }}
     >
-      <CardContent sx={{ p: 3 }}>
+      <Box>
         <Typography
-          variant="h6"
+          variant="h5"
           sx={{
-            mb: 3,
-            fontWeight: 600,
-            color: 'text.primary',
+            mb: 4,
+            fontWeight: 700,
+            color: '#1a202c',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
           }}
         >
           Configurações da Sessão
@@ -48,17 +53,37 @@ const SessionConfiguration: React.FC<SessionConfigurationProps> = ({
             onChange={handleTitleChange}
             variant="outlined"
             sx={{
+              mb: 2,
               '& .MuiOutlinedInput-root': {
-                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                },
+                '&.Mui-focused': {
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                  boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.2)',
+                },
+              },
+              '& .MuiInputLabel-root': {
+                color: '#64748b',
+                fontWeight: 500,
               },
             }}
           />
 
           <Box>
             <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mb: 2 }}
+              variant="body1"
+              sx={{ 
+                mb: 3, 
+                color: '#475569',
+                fontWeight: 500,
+                textAlign: 'center'
+              }}
             >
               Quer avaliar um evento passado?
             </Typography>
@@ -67,15 +92,22 @@ const SessionConfiguration: React.FC<SessionConfigurationProps> = ({
               variant="contained"
               onClick={onFileUpload}
               startIcon={<IosShareOutlinedIcon />}
+              fullWidth
               sx={{
-                backgroundColor: 'grey.800',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
-                px: 3,
-                py: 1,
+                px: 4,
+                py: 2,
                 fontWeight: 600,
-                borderRadius: 2,
+                borderRadius: 3,
+                fontSize: '1rem',
+                textTransform: 'none',
+                boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
-                  backgroundColor: 'grey.900',
+                  background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 12px 35px rgba(102, 126, 234, 0.4)',
                 },
               }}
             >
@@ -83,8 +115,8 @@ const SessionConfiguration: React.FC<SessionConfigurationProps> = ({
             </Button>
           </Box>
         </Stack>
-      </CardContent>
-    </Card>
+      </Box>
+    </Box>
   );
 };
 
