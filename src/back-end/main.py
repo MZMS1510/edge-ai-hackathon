@@ -1,11 +1,59 @@
+"""
+Edge Coach - Main FastAPI Server
+
+This is the primary REST API server for the Edge Coach presentation analysis system.
+It provides endpoints for:
+- Receiving video metrics from MediaPipe processing
+- Handling audio transcriptions
+- Analyzing text for filler words and repetitions
+- Pose classification
+- Session management and statistics
+- AI-powered feedback generation via Ollama
+
+The server stores session data in memory and provides real-time analysis
+of presentation performance metrics.
+
+Usage:
+    python main.py
+    # or
+    uvicorn main:app --host 0.0.0.0 --port 8000
+
+API Documentation:
+    Available at http://localhost:8000/docs when server is running
+
+Author: Edge AI Hackathon Team
+License: MIT
+"""
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
 import time
+import os
+import re
+import json
 from collections import deque
 import threading
-from .ollama_client import get_coaching_feedback, quick_text_analysis
+
+# Check for optional dependencies
+HAS_DEPENDENCIES = True
+try:
+    import httpx
+except ImportError:
+    httpx = None
+    HAS_DEPENDENCIES = False
+
+# Import local modules
+try:
+    from .ollama_client import get_coaching_feedback, quick_text_analysis
+    from . import pose_model
+    from .core_processing import PresentationAnalyzer
+except ImportError:
+    # Fallback for direct execution
+    from ollama_client import get_coaching_feedback, quick_text_analysis
+    import pose_model
+    from core_processing import PresentationAnalyzer
 
 
 # Modelos de dados
@@ -25,6 +73,16 @@ class PhraseCount(BaseModel):
     count: int
     examples: List[str]
 
+class TranscriptData(BaseModel):
+    transcript: str
+    timestamp: Optional[float] = None
+    duration: Optional[float] = None
+    segments: Optional[List[Dict]] = None
+    is_final: Optional[bool] = False
+    language: Optional[str] = "pt"
+
+class AnalyzeRequest(BaseModel):
+    text: str
 
 class AnalyzeResponse(BaseModel):
     summary: str
@@ -259,6 +317,9 @@ class FeedbackOutput(BaseModel):
     text: str
     highlights: List[str] = []
 
+# Initialize global instances
+data_store = DataStore()
+
 # FastAPI App
 app = FastAPI(title="Edge Coach API", version="1.0.0")
 
@@ -304,7 +365,23 @@ def analyze(req: AnalyzeRequest):
     if not req.text or not req.text.strip():
         raise HTTPException(status_code=400, detail="campo 'text' vazio")
 
-    # First, try to call local Ollama daemon
+    # Try to call local Ollama daemon, fallback to local analysis
+    try:
+        result = call_ollama(req.text, "deepseek-r1:8b", SYSTEM_PROMPT)
+        if "summary" in result and "repetitions" in result and "suggestions" in result:
+            return AnalyzeResponse(**result)
+        else:
+            # Fallback to local analysis if Ollama response is not in expected format
+            local_result = local_filler_analysis(req.text)
+            return AnalyzeResponse(**local_result)
+    except RuntimeError:
+        # Fallback to local analysis if Ollama is unavailable
+        local_result = local_filler_analysis(req.text)
+        return AnalyzeResponse(**local_result)
+
+@app.post("/transcript")
+async def receive_transcript(transcript: TranscriptData):
+    """Recebe transcrição de áudio"""
     try:
         data_store.add_transcript(transcript)
         return {"status": "success", "length": len(transcript.transcript)}
