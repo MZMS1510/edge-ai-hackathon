@@ -1,13 +1,25 @@
 #!/usr/bin/env python3
 """
-Edge Video/Audio Tools - Otimizado para Snapdragon X
-Versão otimizada para Dell Latitude 5455 com Qualcomm AI Engine
+Edge Video/Audio Tools - Versão Otimizada para Transcrição em Inglês
+
+Aplicação web Flask otimizada para transcrição de áudio em inglês com:
+- Detecção automática de idioma
+- Modelos maiores para melhor precisão
+- Configurações otimizadas para áudio em inglês
+- Interface melhorada
+
+Uso:
+    python web_video_converter_optimized.py
+    # Acesse: http://localhost:5000
+
+Autor: Edge AI Hackathon Team
 """
 
 import os
 import subprocess
 import whisper
 import torch
+import time
 from flask import Flask, request, jsonify, render_template, send_file
 from werkzeug.utils import secure_filename
 from pathlib import Path
@@ -15,7 +27,7 @@ import uuid
 import platform
 
 app = Flask(__name__)
-app.secret_key = 'edge-video-converter-snapdragon-optimized'
+app.secret_key = 'edge-video-converter-optimized-english'
 
 # Configurações
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -35,9 +47,7 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 def detect_snapdragon_x():
     """Detecta se está rodando em Snapdragon X"""
     try:
-        # Verificar arquitetura ARM64
         if platform.machine() == 'ARM64':
-            # Verificar se é Snapdragon X (Windows on ARM)
             cpu_info = platform.processor().lower()
             if 'qualcomm' in cpu_info or 'snapdragon' in cpu_info:
                 return True
@@ -49,17 +59,16 @@ def optimize_for_snapdragon():
     """Otimizações específicas para Snapdragon X"""
     optimizations = {
         'snapdragon_detected': detect_snapdragon_x(),
-        'torch_device': 'cpu',  # Snapdragon X usa CPU otimizado
-        'model_size': 'base',   # Modelo menor para edge
-        'batch_size': 1,        # Processamento sequencial
-        'num_workers': 1        # Single thread para eficiência
+        'torch_device': 'cpu',
+        'model_size': 'base',   # Modelo base para melhor precisão
+        'batch_size': 1,
+        'num_workers': 1
     }
     
     if optimizations['snapdragon_detected']:
         print("🚀 Snapdragon X detectado - Aplicando otimizações...")
-        # Configurar torch para melhor performance no ARM64
-        torch.set_num_threads(4)  # Usar 4 threads no Snapdragon X
-        torch.backends.cudnn.enabled = False  # Desabilitar CUDA
+        torch.set_num_threads(4)
+        torch.backends.cudnn.enabled = False
     else:
         print("💻 CPU x86 detectado - Usando configurações padrão")
     
@@ -68,7 +77,6 @@ def optimize_for_snapdragon():
 def check_ffmpeg():
     """Verifica se FFmpeg está disponível"""
     try:
-        # Adicionar FFmpeg ao PATH se necessário
         ffmpeg_paths = [
             r"C:\ffmpeg\bin",
             r"C:\Program Files\ffmpeg\bin",
@@ -96,34 +104,19 @@ def allowed_file(filename, file_type='video'):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 def extract_audio_from_video(video_path, output_audio_path):
-    """Extrai áudio de vídeo usando FFmpeg otimizado"""
+    """Extrai áudio de vídeo usando FFmpeg otimizado para transcrição"""
     try:
-        # Otimizações para Snapdragon X
-        if detect_snapdragon_x():
-            # Usar codec mais eficiente para ARM64
-            cmd = [
-                'ffmpeg', 
-                '-i', video_path,
-                '-vn',                      # No video
-                '-acodec', 'aac',          # AAC é mais eficiente que PCM
-                '-ar', '16000',            # Sample rate 16kHz
-                '-ac', '1',                # Mono channel
-                '-b:a', '64k',             # Bitrate otimizado
-                '-y',                      # Overwrite output
-                output_audio_path
-            ]
-        else:
-            # Configuração padrão para x86
-            cmd = [
-                'ffmpeg', 
-                '-i', video_path,
-                '-vn',                      # No video
-                '-acodec', 'pcm_s16le',     # PCM 16-bit
-                '-ar', '16000',             # Sample rate 16kHz
-                '-ac', '1',                 # Mono channel
-                '-y',                       # Overwrite output
-                output_audio_path
-            ]
+        # Configuração otimizada para transcrição
+        cmd = [
+            'ffmpeg', 
+            '-i', video_path,
+            '-vn',                      # No video
+            '-acodec', 'pcm_s16le',     # PCM 16-bit para melhor qualidade
+            '-ar', '16000',             # Sample rate 16kHz (padrão Whisper)
+            '-ac', '1',                 # Mono channel
+            '-y',                       # Overwrite output
+            output_audio_path
+        ]
         
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         return True
@@ -132,49 +125,86 @@ def extract_audio_from_video(video_path, output_audio_path):
         print(f"Erro FFmpeg: {e}")
         return False
 
-def transcribe_audio_file(audio_path, model_size="base", language="pt"):
-    """Transcreve áudio para texto usando Whisper otimizado para Snapdragon X"""
+def transcribe_audio_file_optimized(audio_path, model_size="base", speed_mode="balanced"):
+    """Transcreve áudio para texto com configurações otimizadas para inglês"""
     try:
         if not os.path.exists(audio_path):
             return None, f"Arquivo não encontrado: {audio_path}"
         
-        # Otimizações para Snapdragon X
         optimizations = optimize_for_snapdragon()
         
         print(f"🎤 Carregando modelo Whisper ({model_size})...")
         print(f"🔧 Otimizações: Snapdragon X = {optimizations['snapdragon_detected']}")
+        print(f"⚡ Modo de velocidade: {speed_mode}")
+        print(f"🌍 Idioma: Detecção automática")
         
-        # Carregar modelo com otimizações
+        # Carregar modelo
         model = whisper.load_model(
             model_size,
             device=optimizations['torch_device'],
-            download_root=None  # Usar cache local
+            download_root=None
         )
         
-        print(f"�� Transcrevendo arquivo: {os.path.basename(audio_path)}")
+        print(f"🔄 Transcrevendo arquivo: {os.path.basename(audio_path)}")
         
-        # Configurações de transcrição otimizadas
-        transcribe_options = {
-            'language': language,
-            'fp16': False,  # Forçar FP32 para compatibilidade
-            'verbose': False,
-            'condition_on_previous_text': False,  # Desabilitar para edge
-            'compression_ratio_threshold': 2.4,
-            'logprob_threshold': -1.0,
-            'no_speech_threshold': 0.6,
-        }
-        
-        # Se for Snapdragon X, usar configurações mais conservadoras
-        if optimizations['snapdragon_detected']:
-            transcribe_options.update({
-                'beam_size': 1,  # Beam search menor
-                'patience': 1,   # Menos paciência
+        # Configurações otimizadas para inglês
+        if speed_mode == "fast":
+            transcribe_options = {
+                'language': None,  # Detecção automática
+                'fp16': False,
+                'verbose': True,
+                'beam_size': 2,
+                'patience': 2,
+                'length_penalty': 0.0,
+                'condition_on_previous_text': False,
+                'compression_ratio_threshold': 1.0,
+                'logprob_threshold': -1.0,
+                'no_speech_threshold': 0.6,
+            }
+        elif speed_mode == "balanced":
+            transcribe_options = {
+                'language': None,  # Detecção automática
+                'fp16': False,
+                'verbose': True,
+                'beam_size': 4 if not optimizations['snapdragon_detected'] else 3,
+                'patience': 4 if not optimizations['snapdragon_detected'] else 3,
                 'length_penalty': 1.0,
-            })
+                'condition_on_previous_text': True,
+                'compression_ratio_threshold': 2.4,
+                'logprob_threshold': -1.0,
+                'no_speech_threshold': 0.6,
+            }
+        else:  # quality
+            transcribe_options = {
+                'language': None,  # Detecção automática
+                'fp16': False,
+                'verbose': True,
+                'beam_size': 5,
+                'patience': 5,
+                'length_penalty': 1.0,
+                'condition_on_previous_text': True,
+                'compression_ratio_threshold': 2.4,
+                'logprob_threshold': -1.0,
+                'no_speech_threshold': 0.6,
+            }
         
+        start_time = time.time()
         result = model.transcribe(audio_path, **transcribe_options)
+        end_time = time.time()
         
-        return result["text"], None
+        # Informações detalhadas
+        detected_language = result.get("language", "desconhecido")
+        language_prob = result.get("language_prob", 0.0)
+        print(f"🌍 Idioma detectado: {detected_language} (probabilidade: {language_prob:.2f})")
+        print(f"⏱️ Tempo de transcrição: {end_time - start_time:.2f}s")
+        print(f"📝 Tamanho da transcrição: {len(result['text'])} caracteres")
+        
+        # Limpar texto se necessário
+        text = result["text"].strip()
+        if text:
+            return text, None
+        else:
+            return None, "Nenhum texto foi transcrito"
         
     except Exception as e:
         return None, f"Erro na transcrição: {str(e)}"
@@ -210,21 +240,17 @@ def convert_video_to_audio():
         if file.filename == '':
             return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
         
-        # Verificar se é vídeo
         if not allowed_file(file.filename, 'video'):
             return jsonify({'error': 'Formato de vídeo não suportado. Use: MP4, AVI, MOV, MKV, WebM, FLV'}), 400
         
-        # Verificar FFmpeg
         if not check_ffmpeg():
             return jsonify({'error': 'FFmpeg não encontrado. Instale o FFmpeg primeiro.'}), 500
         
-        # Salvar arquivo
         filename = secure_filename(file.filename)
         unique_filename = f"{uuid.uuid4()}_{filename}"
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(file_path)
         
-        # Extrair áudio do vídeo
         audio_filename = f"{Path(unique_filename).stem}_audio.wav"
         audio_path = os.path.join(app.config['OUTPUT_FOLDER'], audio_filename)
         
@@ -232,7 +258,6 @@ def convert_video_to_audio():
             os.remove(file_path)
             return jsonify({'error': 'Falha na extração de áudio'}), 500
         
-        # Limpar arquivo original
         os.remove(file_path)
         
         return jsonify({
@@ -247,7 +272,7 @@ def convert_video_to_audio():
 
 @app.route('/transcribe-audio', methods=['POST'])
 def transcribe_audio():
-    """Transcreve áudio para texto"""
+    """Transcreve áudio para texto com configurações otimizadas"""
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'Nenhum arquivo enviado'}), 400
@@ -256,18 +281,20 @@ def transcribe_audio():
         if file.filename == '':
             return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
         
-        # Verificar se é áudio
         if not allowed_file(file.filename, 'audio'):
             return jsonify({'error': 'Formato de áudio não suportado. Use: WAV, MP3, M4A, FLAC, OGG, AAC'}), 400
         
-        # Salvar arquivo
+        # Configurações otimizadas
+        speed_mode = request.form.get('speed_mode', 'balanced')
+        model_size = request.form.get('model_size', 'base')
+        
         filename = secure_filename(file.filename)
         unique_filename = f"{uuid.uuid4()}_{filename}"
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(file_path)
         
-        # Transcrever áudio
-        transcription, error = transcribe_audio_file(file_path)
+        # Transcrever com configurações otimizadas
+        transcription, error = transcribe_audio_file_optimized(file_path, model_size, speed_mode)
         if error:
             os.remove(file_path)
             return jsonify({'error': f'Falha na transcrição: {error}'}), 500
@@ -278,15 +305,16 @@ def transcribe_audio():
         with open(txt_path, 'w', encoding='utf-8') as f:
             f.write(transcription)
         
-        # Limpar arquivo original
         os.remove(file_path)
         
         return jsonify({
             'success': True,
-            'message': 'Áudio transcrito com sucesso!',
+            'message': f'Áudio transcrito com sucesso! (Modo: {speed_mode}, Modelo: {model_size})',
             'transcription_file': txt_filename,
-            'transcription': transcription[:200] + "..." if len(transcription) > 200 else transcription,
-            'optimized_for_snapdragon': detect_snapdragon_x()
+            'transcription': transcription[:300] + "..." if len(transcription) > 300 else transcription,
+            'optimized_for_snapdragon': detect_snapdragon_x(),
+            'speed_mode': speed_mode,
+            'model_size': model_size
         })
             
     except Exception as e:
@@ -305,11 +333,11 @@ def download_file(filename):
         return jsonify({'error': f'Erro no download: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    print("🚀 Iniciando Edge Video/Audio Tools - Otimizado para Snapdragon X")
-    print("�� Video to Audio: MP4, AVI, MOV, MKV, WebM, FLV")
+    print("🚀 Iniciando Edge Video/Audio Tools - Versão Otimizada")
+    print("🎬 Video to Audio: MP4, AVI, MOV, MKV, WebM, FLV")
     print("🎵 Audio to Text: WAV, MP3, M4A, FLAC, OGG, AAC")
+    print("🌍 Otimizado para transcrição em inglês com detecção automática")
     
-    # Detectar e mostrar informações do hardware
     optimizations = optimize_for_snapdragon()
     print(f"🔧 Arquitetura: {platform.machine()}")
     print(f"🔧 Processador: {platform.processor()}")

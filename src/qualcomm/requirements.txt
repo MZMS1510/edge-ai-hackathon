@@ -1,0 +1,29 @@
+# Qualcomm Voice Pitch Monitor Requirements
+# Otimizado para Snapdragon X
+
+# Web Framework
+flask==2.3.3
+flask-socketio==5.3.6
+
+# Audio Processing
+numpy==1.24.3
+scipy==1.11.1
+
+# System Monitoring
+psutil==5.9.5
+
+# Real-time Processing
+threading
+queue
+
+# Visualization (opcional)
+matplotlib==3.7.2
+plotly==5.17.0
+
+# Utilities
+python-dotenv==1.0.0
+click==8.1.7
+```
+
+```
+
