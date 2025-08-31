@@ -1,8 +1,22 @@
 #!/usr/bin/env python3
 from typing import List
+from typing import Any
 import re
 import json
 import os
+import importlib.util
+
+# Load local pose_model module safely (works when main.py is imported as a script in tests)
+try:
+    import pose_model
+except Exception:
+    try:
+        _pm_path = os.path.join(os.path.dirname(__file__), "pose_model.py")
+        spec = importlib.util.spec_from_file_location("pose_model", _pm_path)
+        pose_model = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(pose_model)
+    except Exception:
+        pose_model = None
 
 # Try to import runtime dependencies; fall back to lightweight stubs so tests can run without installing
 try:
@@ -182,6 +196,15 @@ class FeedbackInput(BaseModel):
     extra: dict = {}
 
 
+class PoseInput(BaseModel):
+    joints: dict  # flat dict of joint_x/joint_y values
+
+
+class PoseOutput(BaseModel):
+    label: str
+    score: float
+
+
 class FeedbackOutput(BaseModel):
     text: str
     highlights: List[str] = []
@@ -238,6 +261,16 @@ def feedback_service(inp: FeedbackInput, model: str = "llama2"):
     except Exception:
         fb = compose_feedback_fallback(inp)
         return FeedbackOutput(text=fb["text"], highlights=fb["highlights"])
+
+
+@app.post("/pose-classify", response_model=PoseOutput)
+def pose_classify(inp: PoseInput):
+    # Run lightweight predictor (fallback heuristic if no ML model available)
+    try:
+        result = pose_model.predict_from_joints(None, inp.joints)
+        return PoseOutput(label=result["label"], score=float(result["score"]))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/analyze", response_model=AnalyzeResponse)

@@ -2,3 +2,10 @@ fastapi>=0.95.0
 uvicorn[standard]>=0.22.0
 httpx>=0.24.0
 pydantic>=1.10.0
+# Optional (required only for training or better pose ML):
+pandas>=1.5.0; extra == "ml"
+scikit-learn>=1.2.0; extra == "ml"
+joblib>=1.2.0; extra == "ml"
+# Optional CV libs for extraction from video
+opencv-python>=4.7.0; extra == "cv"
+mediapipe>=0.10.0; extra == "cv"

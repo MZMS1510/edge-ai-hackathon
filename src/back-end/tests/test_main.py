@@ -37,3 +37,34 @@ def test_system_prompt_exists():
     assert hasattr(analyzer, "SYSTEM_PROMPT")
     assert isinstance(analyzer.SYSTEM_PROMPT, str)
     assert len(analyzer.SYSTEM_PROMPT) > 0
+
+
+def test_pose_model_fallback():
+    # create a simple symmetric joint dict
+    import importlib.util, os
+    p = Path(__file__).resolve().parents[1] / "pose_model.py"
+    spec = importlib.util.spec_from_file_location("pose_model", str(p))
+    pm = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pm)
+    joints = {
+        'nose_x': 0.5, 'nose_y': 0.5,
+        'left_shoulder_x': 0.4, 'left_shoulder_y': 0.6,
+        'right_shoulder_x': 0.6, 'right_shoulder_y': 0.6,
+    }
+    res = pm.predict_from_joints(None, joints)
+    assert 'label' in res and 'score' in res
+
+
+def test_media_pipe_converter():
+    import importlib.util
+    from pathlib import Path
+    p = Path(__file__).resolve().parents[1] / "media_pipe_utils.py"
+    spec = importlib.util.spec_from_file_location("media_pipe_utils", str(p))
+    mpu = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mpu)
+    # fake landmarks as dicts
+    landmarks = []
+    for i in range(33):
+        landmarks.append({'x': i * 0.01, 'y': i * 0.02, 'z': 0.0})
+    flat = mpu.convert_landmarks_to_flat(landmarks)
+    assert 'nose_x' in flat and 'left_shoulder_x' in flat
